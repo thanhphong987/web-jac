@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JAC 建設特定技能評価試験 総合学習ポータル Pro v5.5</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', 'Noto Sans JP', sans-serif;
+            background-color: #f8fafc;
+            transition: background-color 0.3s ease;
+        }
+        ruby {
+            ruby-position: over;
+        }
+        rt {
+            font-size: 0.58em;
+            color: #475569;
+            letter-spacing: 0.05em;
+            padding-bottom: 0.1em;
+        }
+        .hide-furigana rt {
+            display: none !important;
+        }
+        .hide-translation .vietnamese-translation {
+            display: none !important;
+        }
+        /* Thanh cuộn tùy chỉnh */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Chế độ xem toàn màn hình giả lập */
+        .virtual-fullscreen-active {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 999999 !important;
+            background-color: #f8fafc !important;
+            overflow-y: auto !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800">
+
+    <!-- Thanh Điều Hướng (Header) - Tự động xuống dòng gọn gàng trên Mobile -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-40 transition-all">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <!-- Logo và Tiêu đề -->
+            <div class="flex items-center space-x-3 cursor-pointer w-full sm:w-auto" onclick="goHome()">
+                <div class="bg-amber-500 p-2.5 rounded-xl text-slate-950 flex items-center justify-center shadow-md shrink-0">
+                    <i class="fa-solid fa-helmet-safety text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-base md:text-lg tracking-wider flex flex-wrap items-center gap-1.5">
+                        <span>JAC <ruby>建設特定技能<rt>けんせつとくていぎのう</rt></ruby></span>
+                        <span class="bg-amber-500 text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded-full uppercase">Mazzi Pro v5.5</span>
+                    </h1>
+                    <p class="text-[11px] text-slate-400 font-medium">Hệ Thống Chẩn Đoán Điểm Yếu & Ôn Luyện Đề Thi Toàn Diện</p>
+                </div>
+            </div>
+
+            <!-- Các Nút Điều Khiển - Chuyển sang dạng lưới (Grid) 2 cột mượt mà trên Mobile -->
+            <div class="grid grid-cols-2 gap-2 w-full sm:flex sm:items-center sm:w-auto">
+                <button onclick="switchView('ai-lab-view')" class="col-span-2 sm:col-span-1 bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md">
+                    <i class="fa-solid fa-flask-vial animate-pulse text-amber-300"></i>
+                    <span>Phòng Thí Nghiệm AI</span>
+                </button>
+
+                <button onclick="toggleTranslation()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all text-amber-400">
+                    <i class="fa-solid fa-language text-sm"></i>
+                    <span>Dịch Việt: <span id="transStatus">ON</span></span>
+                </button>
+
+                <button onclick="toggleFurigana()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all text-sky-400">
+                    <i class="fa-solid fa-font"></i>
+                    <span>Furigana: <span id="furiStatus">ON</span></span>
+                </button>
+
+                <button id="toggleVocabBtn" onclick="toggleVocabPanel()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all text-emerald-400">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                    <span>Từ Vựng: <span id="vocabStatus">ON</span></span>
+                </button>
+
+                <div class="flex gap-2 justify-center col-span-2 sm:col-span-1">
+                    <button onclick="openApiKeyModal()" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 border border-slate-700 p-2 rounded-xl text-xs text-amber-400 font-bold flex items-center justify-center" title="Cấu hình API Key">
+                        <i class="fa-solid fa-key"></i>
+                    </button>
+                    <button onclick="toggleTheaterMode()" class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-700 border border-slate-700 p-2 rounded-xl text-xs text-indigo-400 flex items-center justify-center" title="Mở rộng không gian">
+                        <i id="theaterIcon" class="fa-solid fa-expand"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Khu Vực Hiển Thị Nội Dung Chính -->
+    <main id="main-container" class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col justify-start">
+
+        <!-- Bảng điều khiển chính (Dashboard) -->
+        <section id="dashboard-view" class="space-y-6 w-full">
+            <!-- Grid hệ thống: 1 Cột trên Điện thoại, 3 Cột trên Máy tính -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Thẻ Thông Tin Học Viên -->
+                <div class="lg:col-span-1 bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-3xl shadow-lg flex flex-col justify-between min-h-[220px]">
+                    <div class="flex items-center gap-3">
+                        <span class="text-4xl">👷‍♂️</span>
+                        <div>
+                            <h3 class="font-bold text-lg text-slate-100" id="welcome-user-name">Kỹ sư Ôn thi JAC</h3>
+                            <p class="text-xs text-amber-400 flex items-center gap-1 mt-0.5">
+                                <i class="fa-solid fa-award"></i> Luyện thi Chuyên nghiệp v5.5
+                            </p>
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-700/60 my-4 pt-4 space-y-3">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-400">Số đề hoàn thành:</span>
+                            <span class="font-bold text-slate-100" id="stat-completed-desc">0 / 100</span>
+                        </div>
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-400">Tỉ lệ Đỗ trung bình:</span>
+                            <span class="font-bold text-emerald-400" id="stat-avg-desc">0%</span>
+                        </div>
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-400">Hạng học viên:</span>
+                            <span class="font-bold text-amber-400" id="stat-rank-desc">Sơ cấp</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thẻ nội dung trống 2 (Để bạn phát triển thêm tính năng, biểu đồ...) -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-center items-center text-center min-h-[200px]">
+                    <div class="text-slate-400 mb-2">
+                        <i class="fa-solid fa-chart-line text-4xl text-indigo-500/20"></i>
+                    </div>
+                    <p class="text-sm font-semibold text-slate-600">Hệ thống phân tích điểm yếu nâng cao</p>
+                    <p class="text-xs text-slate-400 max-w-sm mt-1">Dữ liệu thống kê tiến độ học tập và biểu đồ radar của bạn sẽ hiển thị tại đây.</p>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- Đoạn Javascript xử lý giao diện mẫu (Tránh lỗi click trên giao diện) -->
+    <script>
+        function goHome() { alert("Trở về trang chủ!"); }
+        function switchView(viewName) { alert("Chuyển sang chế độ: " + viewName); }
+        function toggleTranslation() { 
+            document.body.classList.toggle('hide-translation');
+            const status = document.getElementById('transStatus');
+            status.innerText = status.innerText === 'ON' ? 'OFF' : 'ON';
+        }
+        function toggleFurigana() { 
+            document.body.classList.toggle('hide-furigana');
+            const status = document.getElementById('furiStatus');
+            status.innerText = status.innerText === 'ON' ? 'OFF' : 'ON';
+        }
+        function toggleVocabPanel() {
+            const status = document.getElementById('vocabStatus');
+            status.innerText = status.innerText === 'ON' ? 'OFF' : 'ON';
+        }
+        function openApiKeyModal() { alert("Mở bảng cấu hình API Gemini Key!"); }
+        function toggleTheaterMode() {
+            document.getElementById('main-container').classList.toggle('virtual-fullscreen-active');

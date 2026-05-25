@@ -1,0 +1,2664 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JAC 建設特定技能評価試験 総合学習ポータル Pro v5.5</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', 'Noto Sans JP', sans-serif;
+            background-color: #f8fafc;
+            transition: background-color 0.3s ease;
+        }
+        ruby {
+            ruby-position: over;
+        }
+        rt {
+            font-size: 0.58em;
+            color: #475569;
+            letter-spacing: 0.05em;
+            padding-bottom: 0.1em;
+        }
+        .hide-furigana rt {
+            display: none !important;
+        }
+        .hide-translation .vietnamese-translation {
+            display: none !important;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        /* Virtual Fullscreen/Theater Mode Overrides */
+        .virtual-fullscreen-active {
+            position: fixed !important;
+            inset: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 999999 !important;
+            background-color: #f8fafc !important;
+            overflow-y: auto !important;
+        }
+        /* Flip card animations */
+        .flip-card-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flip-card-flipped {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            backface-visibility: hidden;
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800">
+
+    <!-- Navigation Header -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-40 transition-all">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="goHome()">
+                <div class="bg-amber-500 p-2 rounded-xl text-slate-950 flex items-center justify-center shadow-md">
+                    <i class="fa-solid fa-helmet-safety text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-base md:text-lg tracking-wider flex items-center gap-2">
+                        <span>JAC <ruby>建設特定技能<rt>けんせつとくていぎのう</rt></ruby></span>
+                        <span class="bg-amber-500 text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded-full uppercase">Mazzi Pro v5.5</span>
+                    </h1>
+                    <p class="text-[11px] text-slate-400 font-medium">Hệ Thống Chẩn Đoán Điểm Yếu & Ôn Luyện Đề Thi Toàn Diện</p>
+                </div>
+            </div>
+
+            <!-- Header Controls -->
+            <div class="flex items-center flex-wrap gap-2">
+                <!-- Navigation Tab Switcher to AI Lab -->
+                <button onclick="switchView('ai-lab-view')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-indigo-600/15">
+                    <i class="fa-solid fa-flask-vial animate-pulse text-amber-300"></i>
+                    <span>Phòng Thí Nghiệm AI</span>
+                </button>
+
+                <!-- Translation Toggle -->
+                <button onclick="toggleTranslation()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all text-amber-400">
+                    <i class="fa-solid fa-language text-sm"></i>
+                    <span>Dịch Việt: <span id="transStatus">ON</span></span>
+                </button>
+
+                <!-- Furigana Toggle -->
+                <button onclick="toggleFurigana()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all text-sky-400">
+                    <i class="fa-solid fa-font"></i>
+                    <span>Furigana: <span id="furiStatus">ON</span></span>
+                </button>
+
+                <!-- Vocabulary Mode Toggle -->
+                <button id="toggleVocabBtn" onclick="toggleVocabPanel()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all text-emerald-400">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                    <span>Sổ Tay Từ Vựng: <span id="vocabStatus">ON</span></span>
+                </button>
+
+                <!-- API Key Configurations (Personal key backup) -->
+                <button onclick="openApiKeyModal()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 p-1.5 rounded-xl text-xs text-amber-400 font-bold" title="Cấu hình API Key Gemini">
+                    <i class="fa-solid fa-key"></i>
+                </button>
+
+                <!-- Expand viewport -->
+                <button onclick="toggleTheaterMode()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 p-1.5 rounded-xl text-xs text-indigo-400" title="Mở rộng không gian làm việc">
+                    <i id="theaterIcon" class="fa-solid fa-expand"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main id="main-container" class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col justify-start">
+
+        <!-- Dashboard / Analytics View -->
+        <section id="dashboard-view" class="space-y-6">
+            <!-- Diagnostics Radar & Core Stats Block -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- User Welcome Stats card -->
+                <div class="lg:col-span-1 bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-3xl shadow-md flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-4xl">👷‍♂️</span>
+                            <div>
+                                <h3 class="font-bold text-lg" id="welcome-user-name">Kỹ sư Ôn thi JAC</h3>
+                                <p class="text-xs text-amber-400 flex items-center gap-1 mt-0.5">
+                                    <i class="fa-solid fa-award"></i> Luyện thi Chuyên nghiệp v5.5
+                                </p>
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-700/60 my-5 pt-4 space-y-3">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-slate-400">Số đề hoàn thành:</span>
+                                <span class="font-bold text-slate-100" id="stat-completed-desc">0 / 100</span>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span class="text-slate-400">Tỉ lệ Đỗ trung bình:</span>
+                                <span class="font-bold text-emerald-400" id="stat-avg-desc">0%</span>
+                            </div>
+                            <div class="flex justify-between text-xs">
+                                <span class="text-slate-400">Hạng học viên:</span>
+                                <span class="font-bold text-amber-400" id="stat-rank-desc">Kỹ sư Tập sự</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="openFlashcardModal()" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>Luyện Từ Vựng Nhanh (Flashcards)</span>
+                    </button>
+                </div>
+
+                <!-- Category Weakness Diagnostics Card -->
+                <div class="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                    <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-indigo-600"></i>
+                        <span>Chẩn Đoán Năng Lực Theo Chuyên Đề (Điểm Yếu Của Bạn)</span>
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Diagnostic Bars -->
+                        <div class="space-y-3.5">
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold mb-1">
+                                    <span class="text-slate-600">🛡️ An Toàn & Sức Khỏe Lao Động</span>
+                                    <span class="text-indigo-600" id="diag-pct-safety">0%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                    <div id="diag-bar-safety" class="bg-indigo-600 h-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold mb-1">
+                                    <span class="text-slate-600">🛠️ Sử Dụng Dụng Cụ, Thiết Bị Cầm Tay</span>
+                                    <span class="text-emerald-600" id="diag-pct-tools">0%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                    <div id="diag-bar-tools" class="bg-emerald-50 h-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-3.5">
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold mb-1">
+                                    <span class="text-slate-600">🪜 Giàn Giáo, Giá Đỡ & Thiết Bị Cao</span>
+                                    <span class="text-amber-600" id="diag-pct-scaff">0%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                    <div id="diag-bar-scaff" class="bg-amber-500 h-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold mb-1">
+                                    <span class="text-slate-600">🧱 Kết Cấu Thép, Bê Tông & Vật Liệu</span>
+                                    <span class="text-rose-600" id="diag-pct-concrete">0%</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                    <div id="diag-bar-concrete" class="bg-rose-500 h-full transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between border-t border-slate-100 pt-3 flex-wrap gap-2">
+                        <p class="text-[11px] text-slate-400 font-medium leading-relaxed italic">
+                            * Biểu đồ tự động cập nhật độ chính xác dựa trên từng câu trả lời đúng/sai của bạn.
+                        </p>
+                        <button onclick="switchView('ai-lab-view')" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 bg-indigo-50 px-2.5 py-1 rounded-lg">
+                            <i class="fa-solid fa-flask-vial text-[10px]"></i> Tạo Đề Ôn Yếu Điểm Bằng AI &rarr;
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exam Selector Hub -->
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-6">
+                <div class="flex flex-wrap justify-between items-center border-b border-slate-100 pb-4 gap-4">
+                    <div class="flex space-x-2 bg-slate-100 p-1 rounded-xl">
+                        <button id="tab-btn-gakka" onclick="switchExamHub('gakka')" class="px-5 py-2.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-950 shadow-sm flex items-center gap-2">
+                            <i class="fa-solid fa-file-invoice text-indigo-500"></i>
+                            <span><ruby>学科試験<rt>がっかしけん</rt></ruby> (50 Bộ đề Lý thuyết)</span>
+                        </button>
+                        <button id="tab-btn-jitsugi" onclick="switchExamHub('jitsugi')" class="px-5 py-2.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-950 flex items-center gap-2">
+                            <i class="fa-solid fa-screwdriver-wrench text-emerald-500"></i>
+                            <span><ruby>実技試験<rt>じつぎしけん</rt></ruby> (50 Bộ đề Thực hành)</span>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center space-x-2 text-xs">
+                        <span class="text-slate-400 font-medium">Trạng thái ôn luyện:</span>
+                        <select id="set-filter-select" onchange="filterSets()" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-bold text-slate-600 focus:outline-none">
+                            <option value="all">Tất cả bộ đề (1 - 50)</option>
+                            <option value="unattempted">Chưa làm</option>
+                            <option value="passed">Đã Đạt (>=65%)</option>
+                            <option value="failed">Chưa Đạt (&lt;65%)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4" id="sets-grid-container">
+                    <!-- Dynamic sets generated here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Active Exam View -->
+        <section id="exam-view" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm p-4 border border-slate-100 flex flex-wrap justify-between items-center gap-4">
+                <div class="flex items-center space-x-3">
+                    <span id="active-exam-badge" class="px-3 py-1.5 rounded-xl text-xs font-extrabold text-white bg-indigo-600">
+                        学科試験 - SET 01
+                    </span>
+                    <div class="text-xs text-slate-500 font-semibold">
+                        <ruby>問題<rt>もんだい</rt></ruby>: <span id="current-q-num" class="font-extrabold text-slate-900">1</span> / <span id="total-q-count" class="font-bold text-slate-900">40</span>
+                    </div>
+                </div>
+
+                <!-- Progress Tracker -->
+                <div class="w-full md:w-64 bg-slate-100 h-2 rounded-full overflow-hidden order-last md:order-none">
+                    <div id="exam-progress-bar" class="bg-indigo-600 h-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+
+                <!-- Clock / Countdown -->
+                <div class="flex items-center space-x-2 bg-rose-50 text-rose-600 px-3.5 py-1.5 rounded-xl border border-rose-100">
+                    <i class="fa-solid fa-clock animate-pulse"></i>
+                    <span id="exam-timer-display" class="font-mono font-black text-sm">00:00</span>
+                </div>
+            </div>
+
+            <!-- Exam Details Grid (Questions & Question Index Map) -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Question workspace -->
+                <div class="lg:col-span-3 space-y-4">
+                    <div class="bg-white rounded-3xl shadow-md p-6 md:p-8 border border-slate-100 min-h-[380px] flex flex-col justify-between relative">
+                        <div>
+                            <!-- Category Metadata -->
+                            <div class="flex justify-between items-center mb-4">
+                                <span id="question-category-tag" class="text-[10px] uppercase font-black px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 tracking-wider">
+                                    🛡️ AN TOÀN LAO ĐỘNG
+                                </span>
+                                <!-- AI Tutor Button for specific question -->
+                                <button onclick="askAITutorAboutCurrent()" class="text-xs text-indigo-600 hover:text-indigo-800 font-extrabold flex items-center gap-1.5 transition">
+                                    <i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i>
+                                    <span>Hỏi Trợ lý AI (Giải thích câu này)</span>
+                                </button>
+                            </div>
+
+                            <!-- Question Content -->
+                            <div class="text-base md:text-lg font-bold leading-relaxed text-slate-900 space-y-3" id="active-question-text">
+                                <!-- Loaded dynamically -->
+                            </div>
+
+                            <!-- Structural graphic canvas -->
+                            <div id="active-question-visuals" class="hidden justify-center bg-slate-50 border border-slate-100 rounded-2xl p-4 my-6">
+                                <!-- Loaded dynamically via SVG -->
+                            </div>
+                        </div>
+
+                        <!-- Options Wrapper -->
+                        <div id="active-options-list" class="space-y-3.5 mt-8">
+                            <!-- Options list buttons -->
+                        </div>
+                    </div>
+
+                    <!-- Question Navigation Bar -->
+                    <div class="flex justify-between items-center">
+                        <button onclick="navigateQuestions(-1)" id="btn-question-prev" class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-2xl text-xs transition flex items-center gap-2">
+                            <i class="fa-solid fa-arrow-left"></i>
+                            <span><ruby>前<rt>まえ</rt></ruby>の<ruby>問題<rt>もんだい</rt></ruby></span>
+                        </button>
+                        <button onclick="navigateQuestions(1)" id="btn-question-next" class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-2xl text-xs transition flex items-center gap-2">
+                            <span><ruby>次<rt>つぎ</rt></ruby>の<ruby>問題<rt>もんだい</rt></ruby></span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                        <button onclick="triggerSubmitModal()" id="btn-question-submit" class="hidden px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black rounded-2xl text-xs shadow-md shadow-emerald-500/10 transition flex items-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span><ruby>終了して採点<rt>しゅうりょうしてさいてん</rt></ruby></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Side Map index mapping -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-3xl shadow-sm p-5 border border-slate-100">
+                        <h4 class="font-extrabold text-slate-950 text-xs uppercase tracking-wider border-b border-slate-100 pb-3 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-table-cells text-indigo-500"></i>
+                            <span>Sơ đồ Làm Bài</span>
+                        </h4>
+
+                        <div class="grid grid-cols-5 gap-2 max-h-[300px] overflow-y-auto pr-1" id="exam-indices-grid">
+                            <!-- Index nodes populated dynamically -->
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-slate-100 space-y-2 text-[11px] text-slate-500 font-semibold">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-md bg-indigo-600 block shadow-sm"></span>
+                                <span>Đã khoanh chọn (Đã trả lời)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-md border-2 border-indigo-400 bg-indigo-50 block animate-pulse"></span>
+                                <span>Đang đọc hiểu (Đang chọn)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-md bg-slate-100 border border-slate-200 block"></span>
+                                <span>Bỏ trống (Chưa làm)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Lab View -->
+        <section id="ai-lab-view" class="hidden space-y-6 animate-in fade-in duration-300">
+            <!-- Header Block -->
+            <div class="bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 rounded-3xl p-6 md:p-8 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <span class="bg-indigo-500/30 text-indigo-300 text-[10px] uppercase font-black px-2.5 py-1 rounded-full tracking-wider border border-indigo-400/20">
+                        🔬 Premium Experimental Hub
+                    </span>
+                    <h2 class="text-2xl md:text-3xl font-extrabold mt-2 tracking-wide flex items-center gap-2.5">
+                        <i class="fa-solid fa-flask-vial text-amber-400"></i>
+                        <span>Phòng Thí Nghiệm Học Tập AI</span>
+                    </h2>
+                    <p class="text-xs text-slate-300 font-medium mt-1">Được hỗ trợ bởi hệ thống mô hình thế hệ mới Gemini 3.0 & 2.5 Flash</p>
+                </div>
+                <button onclick="goHome()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold rounded-xl transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-chevron-left"></i> Quay lại Dashboard
+                </button>
+            </div>
+
+            <!-- Lab Module Toggles -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-slate-200 pb-2">
+                <button id="btn-lab-quiz" onclick="switchLabTab('quiz')" class="flex items-center gap-3 p-4 rounded-2xl border-2 border-indigo-600 bg-indigo-50 text-indigo-950 text-left font-bold transition">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-lg"><i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i></div>
+                    <div>
+                        <span class="text-[10px] text-indigo-500 font-extrabold uppercase block">Module 1</span>
+                        <span class="text-sm">Sinh Đề Tự Động Từ Điểm Yếu</span>
+                    </div>
+                </button>
+                <button id="btn-lab-image" onclick="switchLabTab('image')" class="flex items-center gap-3 p-4 rounded-2xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-left font-bold transition">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg"><i class="fa-solid fa-image"></i></div>
+                    <div>
+                        <span class="text-[10px] text-emerald-600 font-extrabold uppercase block">Module 2</span>
+                        <span class="text-sm">Phân Tích Bản Vẽ & Ảnh Hiện Trường</span>
+                    </div>
+                </button>
+                <button id="btn-lab-tts" onclick="switchLabTab('tts')" class="flex items-center gap-3 p-4 rounded-2xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-left font-bold transition">
+                    <div class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center text-lg"><i class="fa-solid fa-volume-high"></i></div>
+                    <div>
+                        <span class="text-[10px] text-rose-600 font-extrabold uppercase block">Module 3</span>
+                        <span class="text-sm">Phát Âm & Đàm Thoại Công Trường (TTS)</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- LAB WORKSPACES CONTAINER -->
+            <div class="bg-white rounded-3xl p-6 shadow-md border border-slate-100 min-h-[450px]">
+                
+                <!-- Tab 1: AI Quiz Generator -->
+                <div id="lab-tab-quiz" class="space-y-6">
+                    <div class="max-w-2xl space-y-2">
+                        <h3 class="font-extrabold text-slate-900 text-lg">Hệ Thống Tự Động Biên Soạn Đề Theo Năng Lực Học Viên</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed">
+                            Trợ lý AI sẽ tự động phân tích biểu đồ năng lực hiện tại của bạn dựa trên cơ sở dữ liệu học tập cục bộ. Mô hình sẽ chọn lọc chuyên đề bạn đang có tỷ lệ điểm thấp nhất và biên soạn một đề mini 5 câu trắc nghiệm ngẫu nhiên nhưng cực kỳ bám sát lý thuyết chuẩn JAC.
+                        </p>
+                    </div>
+
+                    <!-- API Check Warning block -->
+                    <div id="ai-quiz-warning-box" class="hidden p-4 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-800 space-y-2">
+                        <p class="font-bold flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-amber-500"></i> API Key Gemini Trống</p>
+                        <p class="leading-relaxed">Bạn cần dán mã API Key cá nhân của mình để trải nghiệm tính năng sinh đề bằng AI. Hãy nhấn nút Khóa Vàng ở thanh công cụ phía trên để cài đặt.</p>
+                    </div>
+
+                    <!-- Diagnostics Preview & Fire Button -->
+                    <div id="ai-quiz-setup" class="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="text-left space-y-1">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Chẩn Đoán Trọng Tâm Sinh Đề</span>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs px-2.5 py-1 rounded-lg font-bold" id="ai-quiz-weakest-tag">Mục yếu nhất: Đang tính toán...</span>
+                                <span class="bg-slate-200 text-slate-700 text-[10px] px-2 py-0.5 rounded-md font-bold">5 Câu Hỏi • Tự Động Giải Thích Chữa Lỗi</span>
+                            </div>
+                        </div>
+                        <button onclick="generateAiQuiz()" id="btn-generate-ai-quiz" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-2xl text-xs transition shadow-md shadow-indigo-600/15 flex items-center gap-2 flex-shrink-0">
+                            <i class="fa-solid fa-wand-magic-sparkles animate-spin"></i>
+                            <span>Kích Hoạt Sinh Đề Bằng AI</span>
+                        </button>
+                    </div>
+
+                    <!-- Generating Spinner -->
+                    <div id="ai-quiz-loader" class="hidden flex-col items-center justify-center py-12 space-y-3">
+                        <div class="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                        <p class="text-xs text-slate-500 font-extrabold animate-pulse">Gemini AI đang phân tích sơ đồ điểm yếu & soạn thảo đề thi riêng cho bạn...</p>
+                    </div>
+
+                    <!-- AI Quiz Interactive Runner -->
+                    <div id="ai-quiz-runner" class="hidden space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                            <span class="text-xs font-black text-indigo-600 uppercase tracking-wider flex items-center gap-1.5"><i class="fa-solid fa-laptop-code"></i> AI CUSTOM PRACTICE TEST</span>
+                            <span class="text-xs font-bold text-slate-500" id="ai-quiz-counter">Câu 1 / 5</span>
+                        </div>
+                        <div class="bg-indigo-50/20 border border-indigo-100/40 p-5 rounded-2xl space-y-3" id="ai-quiz-question-box">
+                            <!-- Question injected -->
+                        </div>
+                        <div class="space-y-3" id="ai-quiz-options-box">
+                            <!-- Options injected -->
+                        </div>
+                        <div class="flex justify-between pt-3 border-t border-slate-100">
+                            <button id="btn-ai-quiz-back" onclick="exitAiQuiz()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">Thoát Đề AI</button>
+                            <button id="btn-ai-quiz-next" class="hidden px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition">Tiếp theo &rarr;</button>
+                        </div>
+                    </div>
+
+                    <!-- AI Quiz Final Result Block -->
+                    <div id="ai-quiz-result" class="hidden bg-slate-50 border border-slate-200/60 rounded-3xl p-6 text-center space-y-4">
+                        <div class="text-5xl">🎯</div>
+                        <h4 class="font-black text-lg text-slate-900">Kết quả Đề thi Tự động AI</h4>
+                        <p class="text-xs text-slate-500 max-w-md mx-auto">Hệ thống đã ghi lại các câu trả lời của bạn để phục vụ việc chẩn đoán mảng yếu kế tiếp.</p>
+                        <div class="text-3xl font-black text-indigo-600" id="ai-quiz-score-num">0 / 5 ĐÚNG</div>
+                        <button onclick="resetAiQuizSetup()" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition">Tạo bộ đề mới khác</button>
+                    </div>
+                </div>
+
+                <!-- Tab 2: AI Blueprint / Tool Explainer (Vision Module) -->
+                <div id="lab-tab-image" class="hidden space-y-6">
+                    <div class="max-w-2xl space-y-2">
+                        <h3 class="font-extrabold text-slate-900 text-lg">AI Phân Tích Hình Ảnh, Bản Vẽ Kỹ Thuật & Dụng Cụ Thực Hành</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed">
+                            Hãy tải lên một tấm ảnh chụp một công cụ bất kỳ ở công trường (như đai toàn thân, đầm dùi, quả dọi...), hoặc một bản vẽ thi công dầm móng. Mô hình Gemini Vision sẽ quét qua vật thể, trích xuất từ vựng Kanji chuyên môn, giải nghĩa và đưa ra khuyến nghị an toàn thực thi.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Left Controls -->
+                        <div class="space-y-4">
+                            <!-- Image input card -->
+                            <div class="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50 flex flex-col items-center justify-center space-y-3 cursor-pointer hover:bg-slate-100 transition relative">
+                                <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400"></i>
+                                <div class="text-xs">
+                                    <p class="font-bold text-slate-700">Tải ảnh của bạn từ máy tính/điện thoại</p>
+                                    <p class="text-slate-400 mt-0.5">JPEG, PNG dưới 5MB</p>
+                                </div>
+                                <input type="file" id="ai-image-file-input" onchange="handleAiImageUpload(event)" class="absolute inset-0 opacity-0 cursor-pointer">
+                            </div>
+
+                            <!-- Mock sample assets inside for quick trial -->
+                            <div class="space-y-2">
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Hoặc thử ngay mẫu bản vẽ có sẵn dưới đây:</span>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button onclick="selectMockImage('blueprint')" class="p-3 border rounded-xl bg-white hover:bg-slate-50 text-left transition text-xs font-bold flex items-center gap-2">
+                                        <i class="fa-solid fa-file-signature text-indigo-500 text-sm"></i>
+                                        <div>
+                                            <span class="block">Mẫu 1: Bản vẽ móng dầm</span>
+                                            <span class="text-[9px] text-slate-400 font-medium">Blueprint specs</span>
+                                        </div>
+                                    </button>
+                                    <button onclick="selectMockImage('harness')" class="p-3 border rounded-xl bg-white hover:bg-slate-50 text-left transition text-xs font-bold flex items-center gap-2">
+                                        <i class="fa-solid fa-vest text-emerald-500 text-sm"></i>
+                                        <div>
+                                            <span class="block">Mẫu 2: Đai an toàn</span>
+                                            <span class="text-[9px] text-slate-400 font-medium">Safety harness</span>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Preview of currently selected asset -->
+                            <div id="ai-image-preview-box" class="hidden p-4 bg-slate-50 rounded-2xl border flex items-center gap-4">
+                                <img id="ai-image-preview-img" src="" class="w-20 h-20 object-cover rounded-xl border border-slate-200">
+                                <div class="flex-grow text-xs">
+                                    <p class="font-bold text-slate-700" id="ai-image-preview-name">Selected asset</p>
+                                    <button onclick="analyzeSelectedImage()" class="mt-2 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold transition">Bắt Đầu Phân Tích</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Analysis Output Display -->
+                        <div class="border border-slate-100 rounded-3xl p-5 bg-slate-50 min-h-[250px] flex flex-col justify-between relative">
+                            <div>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-3">Kết quả Phân tích Gemini Vision</span>
+                                
+                                <div id="ai-image-loader" class="hidden flex-col items-center justify-center py-12 space-y-2">
+                                    <div class="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <p class="text-xs text-slate-400 font-bold">AI đang quét và trích xuất chữ Hán chuyên môn từ ảnh...</p>
+                                </div>
+
+                                <div id="ai-image-output-content" class="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap space-y-2 font-medium">
+                                    Bản phân tích rỗng. Vui lòng tải ảnh lên hoặc chọn bản vẽ mô phỏng mẫu bên trái rồi ấn "Bắt đầu phân tích".
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: AI Speech Pronunciation Reader (TTS Module) -->
+                <div id="lab-tab-tts" class="hidden space-y-6">
+                    <div class="max-w-2xl space-y-2">
+                        <h3 class="font-extrabold text-slate-900 text-lg">AI Tổng Hợp Đàm Thoại & Hướng Dẫn Phát Âm Giọng Đọc Chuẩn</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed">
+                            Luyện kỹ năng đàm thoại thực tế tại công trường. Hãy chọn một phân cảnh xây dựng tiêu biểu dưới đây, trợ lý Gemini sẽ thiết kế kịch bản cuộc hội thoại Nhật-Việt và đọc trực tiếp bằng giọng nói tự nhiên chuẩn xác thông qua mô hình TTS đa kênh.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Left controls -->
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-bold text-slate-600 block mb-1">Chọn ngữ cảnh hội thoại:</label>
+                                <select id="tts-scenario-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none">
+                                    <option value="scenario_kyt">Buổi họp sáng an toàn lao động (KYT Meeting)</option>
+                                    <option value="scenario_harness">Báo cáo dây an toàn toàn thân bị sờn (Damaged Harness)</option>
+                                    <option value="scenario_heat">Báo cáo bị say nắng, muốn xin nghỉ mát (Heatstroke warning)</option>
+                                    <option value="scenario_crane">Ra tín hiệu合図 cho xe cẩu hạ dầm dọc (Crane operations)</option>
+                                </select>
+                            </div>
+
+                            <button onclick="generateTtsDialogue()" class="w-full py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold transition shadow-md shadow-rose-600/15 flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-music"></i>
+                                <span>Khởi Tạo Hội Thoại & Đọc File Gốc</span>
+                            </button>
+
+                            <!-- Audio Controller Box -->
+                            <div id="tts-audio-player-box" class="hidden p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse"></div>
+                                        <span class="text-xs font-black text-slate-700">BẢN THU GIỌNG ĐỌC AI NATIVE (24KHz WAV)</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 font-semibold" id="tts-duration">0:00</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <button id="btn-play-tts-audio" onclick="playCurrentTtsAudio()" class="w-10 h-10 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center text-sm transition shadow-md">
+                                        <i class="fa-solid fa-play"></i>
+                                    </button>
+                                    <div class="flex-grow bg-slate-200 h-1 rounded-full overflow-hidden relative">
+                                        <div id="tts-progress-wave" class="bg-rose-600 h-full w-0"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Script Viewer -->
+                        <div class="border border-slate-100 rounded-3xl p-5 bg-slate-50 min-h-[250px] flex flex-col justify-between">
+                            <div>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-3">Kịch Bản Phân Vai Hội Thoại Song Ngữ</span>
+                                
+                                <div id="tts-dialogue-loader" class="hidden flex-col items-center justify-center py-12 space-y-2">
+                                    <div class="w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <p class="text-xs text-slate-400 font-bold">Trợ lý đang thiết kế kịch bản thoại và chạy TTS đa kênh...</p>
+                                </div>
+
+                                <div id="tts-dialogue-script-box" class="space-y-3 text-xs text-slate-800 leading-relaxed font-bold">
+                                    Chưa có kịch bản khởi tạo. Vui lòng chọn ngữ cảnh rồi ấn "Khởi Tạo Hội Thoại" bên trái.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Result / Scoring Performance View -->
+        <section id="result-view" class="hidden max-w-4xl w-full mx-auto space-y-6">
+            <div class="bg-white rounded-3xl shadow-lg p-6 md:p-8 border border-slate-100 text-center">
+                <div id="result-emoji-seal" class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-5xl shadow-inner border border-slate-100">
+                    🏆
+                </div>
+                <h2 class="text-3xl font-black text-slate-900" id="result-verdict-title">Xếp loại kết quả</h2>
+                <p class="text-slate-500 text-xs mt-1" id="result-verdict-subtitle">Chúc mừng bạn đã hoàn thành bài thi</p>
+
+                <!-- Stats Display -->
+                <div class="grid grid-cols-3 gap-4 my-8">
+                    <div class="bg-slate-50/85 p-4 rounded-2xl border border-slate-100">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Trả lời đúng</span>
+                        <p class="text-2xl font-extrabold text-slate-800 mt-1"><span id="result-correct-count">0</span> / <span id="result-total-count">40</span></p>
+                    </div>
+                    <div class="bg-slate-50/85 p-4 rounded-2xl border border-slate-100">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tỷ lệ chính xác</span>
+                        <p class="text-2xl font-extrabold text-slate-800 mt-1"><span id="result-percentage">0%</span></p>
+                    </div>
+                    <div class="bg-slate-50/85 p-4 rounded-2xl border border-slate-100">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Kết quả chung</span>
+                        <p class="text-lg font-black mt-2" id="result-badge-status">ĐẠT</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-center gap-3">
+                    <button onclick="goHome()" class="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-2xl text-xs transition flex items-center gap-2">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Quay về Dashboard</span>
+                    </button>
+                    <button id="btn-re-exam" class="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold rounded-2xl text-xs transition flex items-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Làm lại bộ đề này</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Vocabulary matching current exam set -->
+            <div class="bg-white rounded-3xl p-6 shadow-md border border-slate-100 space-y-4">
+                <h3 class="font-extrabold text-slate-950 text-sm flex items-center gap-2 pb-4 border-b border-slate-100">
+                    <i class="fa-solid fa-book-open text-emerald-500 animate-pulse"></i>
+                    <span>📚 Sổ Tay Từ Vựng Xuất Hiện Trong Đề Thi Này (Sau khi thi)</span>
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="post-exam-vocab-container">
+                    <!-- Dynamic review cards -->
+                </div>
+            </div>
+
+            <!-- Detailed feedback sheet -->
+            <div class="bg-white rounded-3xl p-6 shadow-md border border-slate-100 space-y-6">
+                <h3 class="font-extrabold text-slate-950 text-sm flex items-center gap-2 pb-4 border-b border-slate-100">
+                    <i class="fa-solid fa-list-check text-indigo-500"></i>
+                    <span>Chi Tiết Đáp Án & Giải Thích Chi Tiết</span>
+                </h3>
+
+                <div class="space-y-6" id="result-review-container">
+                    <!-- Dynamic review modules loaded here -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Interactive 3D Flip Flashcards Modal -->
+    <div id="modal-flashcard" class="hidden fixed inset-0 bg-slate-950/60 backdrop-blur-xs items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 max-w-md w-full border border-slate-100 flex flex-col justify-between min-h-[420px]">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                <span class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-images text-amber-500"></i>
+                    <span>Học Từ Vựng Song Ngữ Chuyên Ngành (Flashcards)</span>
+                </span>
+                <button onclick="closeModal('modal-flashcard')" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-circle-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Card Flip Area -->
+            <div class="w-full h-56 perspective cursor-pointer" onclick="flipActiveCard()">
+                <div id="flashcard-inner" class="w-full h-full relative flip-card-inner">
+                    <!-- Front Cover -->
+                    <div class="absolute inset-0 bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-2xl flex flex-col justify-center items-center p-6 text-center shadow-md flip-card-front">
+                        <span class="text-sm font-semibold tracking-wider opacity-80 uppercase block mb-2">Kanji & Cách đọc</span>
+                        <h4 id="fc-word-front" class="text-3xl font-black tracking-wide">...</h4>
+                        <p id="fc-kana-front" class="text-sm font-bold opacity-90 mt-2">...</p>
+                        <span class="absolute bottom-4 text-[10px] font-medium tracking-widest opacity-60">ẤN VÀO THẺ ĐỂ LẬT XEM NGHĨA 🔄</span>
+                    </div>
+                    <!-- Back Cover -->
+                    <div class="absolute inset-0 bg-slate-50 border-2 border-indigo-100 text-slate-800 rounded-2xl flex flex-col justify-between p-6 shadow-md flip-card-back">
+                        <div>
+                            <div class="flex justify-between items-center border-b border-slate-100 pb-2 mb-2">
+                                <span id="fc-sino-back" class="bg-emerald-100 text-emerald-800 text-[9px] font-black px-2 py-0.5 rounded uppercase">...</span>
+                                <button id="fc-speak-btn" class="text-indigo-600 hover:text-indigo-800 p-1 bg-indigo-50 rounded" onclick="event.stopPropagation(); playFcSpeech()"><i class="fa-solid fa-volume-high text-xs"></i></button>
+                            </div>
+                            <p id="fc-vn-back" class="text-sm font-bold text-indigo-950 leading-relaxed">...</p>
+                        </div>
+                        <div class="bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-100 text-[10px] text-slate-600 leading-relaxed">
+                            <span class="font-extrabold text-slate-800 block mb-0.5">Ví dụ tại công trường:</span>
+                            <span id="fc-ex-back">...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Control Buttons -->
+            <div class="flex justify-between items-center mt-6 pt-3 border-t border-slate-100">
+                <button onclick="navigateFlashcard(-1)" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition text-slate-700 text-xs font-bold"><i class="fa-solid fa-arrow-left"></i> Trước</button>
+                <span class="text-xs font-bold text-slate-400"><span id="fc-current-index">1</span> / <span id="fc-total-index">150</span></span>
+                <button onclick="navigateFlashcard(1)" class="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl transition text-slate-700 text-xs font-bold">Sau <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Key Configurations Dialog -->
+    <div id="modal-apikey-config" class="hidden fixed inset-0 bg-slate-950/40 backdrop-blur-xs items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 max-sm w-full border border-slate-100">
+            <div class="text-center">
+                <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                    <i class="fa-solid fa-key"></i>
+                </div>
+                <h3 class="text-base font-black text-slate-900 mb-1">Cấu hình API Key Gemini</h3>
+                <p class="text-xs text-slate-400 leading-relaxed mb-4">Nhập mã API của bạn để kích hoạt hệ thống tra từ điển và trợ lý AI thời gian thực.</p>
+                <input type="password" id="input-api-key" placeholder="AIzaSy..." class="w-full px-4 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold mb-4 text-center">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="closeModal('modal-apikey-config')" class="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">
+                    Đóng lại
+                </button>
+                <button onclick="saveApiKey()" class="py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition">
+                    Lưu cấu hình
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Confirmation Modal -->
+    <div id="modal-submit-confirm" class="hidden fixed inset-0 bg-slate-950/40 backdrop-blur-xs items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 max-w-sm w-full border border-slate-100">
+            <div class="text-center">
+                <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h3 class="text-base font-black text-slate-900 mb-2">Xác nhận nộp bài thi?</h3>
+                <p id="submit-confirm-text" class="text-xs text-slate-500 leading-relaxed">Bạn có chắc chắn muốn nộp bài và kết thúc bài thi sát hạch này ngay lập tức?</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mt-6">
+                <button onclick="closeModal('modal-submit-confirm')" class="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-extrabold rounded-xl transition">
+                    Làm tiếp
+                </button>
+                <button onclick="submitExamNow()" class="py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold rounded-xl transition shadow-md shadow-indigo-600/10">
+                    Nộp bài & Chấm điểm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeout Alert -->
+    <div id="modal-timeout-alert" class="hidden fixed inset-0 bg-slate-950/40 backdrop-blur-xs items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 max-w-sm w-full border border-slate-100">
+            <div class="text-center">
+                <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl animate-ping">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+                <h3 class="text-base font-black text-slate-900 mb-2">Hết giờ làm bài!</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">Thời gian quy định cho bài thi đã hết. Hệ thống sẽ tự động nộp bài và tính điểm cho bạn.</p>
+            </div>
+            <div class="mt-5">
+                <button onclick="submitExamNow()" class="w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold rounded-xl transition">
+                    Xem kết quả chấm điểm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamic Selection Tooltip popup -->
+    <div id="mazzi-floating-btn" class="hidden absolute bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-white font-extrabold text-[11px] px-3 py-1.5 rounded-full shadow-lg border border-slate-800 cursor-pointer transition duration-150 items-center gap-1.5 z-50">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span>Tra cứu Mazzi</span>
+    </div>
+
+    <!-- Mazzi AI Output popup window -->
+    <div id="modal-mazzi-output" class="hidden fixed inset-0 bg-slate-950/40 backdrop-blur-xs items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 max-w-md w-full border border-slate-100">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                <span class="text-xs font-black text-slate-900 flex items-center gap-1.5 uppercase">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-500 animate-spin"></i>
+                    <span>Từ điển Chuyên ngành JAC Mazzi</span>
+                </span>
+                <button onclick="closeModal('modal-mazzi-output')" class="text-slate-400 hover:text-slate-600 transition">
+                    <i class="fa-solid fa-circle-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Cụm từ đã tra</span>
+                    <h4 class="text-lg font-extrabold text-slate-800" id="mazzi-selected-text">...</h4>
+                </div>
+                
+                <div id="mazzi-loading-indicator" class="hidden flex-col items-center justify-center py-6 space-y-2">
+                    <div class="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                    <p class="text-xs text-slate-400 font-bold">Gemini AI đang giải nghĩa chuyên ngành...</p>
+                </div>
+                
+                <div id="mazzi-result-content" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100 text-xs">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Cách đọc (Furigana)</span>
+                            <p class="font-extrabold text-indigo-600 mt-0.5" id="mazzi-kana">...</p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Âm Hán Việt</span>
+                            <p class="font-extrabold text-emerald-600 mt-0.5" id="mazzi-sino">...</p>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nghĩa tiếng Việt (Xây dựng)</span>
+                        <p class="text-sm font-bold text-indigo-700 mt-1 leading-relaxed" id="mazzi-definition">...</p>
+                    </div>
+                    <div class="bg-amber-50/50 border border-amber-100 p-3.5 rounded-2xl text-[11px] text-slate-600 leading-relaxed">
+                        <span class="font-black text-slate-900 block mb-1">💡 Bối cảnh sử dụng tại công trường:</span>
+                        <p id="mazzi-example">...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sliding Sidebar Dictionary Drawer -->
+    <div id="vocab-drawer" class="fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col border-l border-slate-200">
+        <div class="bg-slate-900 text-white p-4 flex justify-between items-center flex-shrink-0">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-book-open text-amber-400 text-lg"></i>
+                <div class="text-left">
+                    <span class="font-extrabold text-xs uppercase tracking-wider block">Sổ Tay Từ Vựng JAC</span>
+                    <span id="vocab-context-label" class="text-[9px] text-amber-300 font-bold uppercase tracking-wider block mt-0.5">TẤT CẢ TỪ VỰNG HỆ THỐNG</span>
+                </div>
+            </div>
+            <button onclick="toggleVocabPanel()" class="text-slate-400 hover:text-white transition">
+                <i class="fa-solid fa-circle-xmark text-lg"></i>
+            </button>
+        </div>
+        <div class="p-4 border-b border-slate-100 bg-slate-50 space-y-2.5 flex-shrink-0">
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                <input type="text" id="vocab-search-input" oninput="filterVocabList()" placeholder="Tìm Kanji, Hiragana hoặc Nghĩa..." class="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 font-semibold text-slate-700">
+            </div>
+            <div class="flex gap-1 overflow-x-auto pb-1 text-[10px]">
+                <button id="cat-tab-all" onclick="filterVocabCategory('all')" class="px-2.5 py-1 rounded-lg font-bold transition bg-amber-500 text-slate-950 flex-shrink-0">Tất cả</button>
+                <button id="cat-tab-safety" onclick="filterVocabCategory('safety')" class="px-2.5 py-1 rounded-lg font-bold transition bg-slate-100 text-slate-600 flex-shrink-0">An toàn</button>
+                <button id="cat-tab-construction" onclick="filterVocabCategory('construction')" class="px-2.5 py-1 rounded-lg font-bold transition bg-slate-100 text-slate-600 flex-shrink-0">Dụng cụ</button>
+                <button id="cat-tab-material" onclick="filterVocabCategory('material')" class="px-2.5 py-1 rounded-lg font-bold transition bg-slate-100 text-slate-600 flex-shrink-0">Vật liệu</button>
+            </div>
+        </div>
+        <div id="vocab-list-container" class="flex-grow overflow-y-auto p-4 space-y-3">
+            <!-- Dynamic vocab list -->
+        </div>
+        <div class="p-3 bg-amber-50 text-[11px] text-amber-800 border-t border-amber-100 flex items-center gap-2 flex-shrink-0">
+            <i class="fa-solid fa-circle-info text-sm flex-shrink-0 text-amber-600 animate-pulse"></i>
+            <p class="font-medium leading-relaxed">Bộ đề thi thông minh sẽ tự động đồng bộ hóa để đưa ra các từ vựng trọng tâm nhất.</p>
+        </div>
+    </div>
+
+    <!-- AI Chatbot Tutor Panel (Slide-out Right Drawer) -->
+    <div id="ai-tutor-drawer" class="fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col border-l border-slate-200">
+        <div class="bg-indigo-900 text-white p-4 flex justify-between items-center flex-shrink-0">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                <div class="text-left">
+                    <span class="font-extrabold text-xs uppercase block">Trợ Lý Sư Phạm Sưu Tầm JAC AI</span>
+                    <span class="text-[9px] text-indigo-200 font-semibold block">BÁC SĨ GIẢI THÍCH CÂU HỎI & CHUYÊN ĐỀ</span>
+                </div>
+            </div>
+            <button onclick="toggleAITutorDrawer()" class="text-slate-300 hover:text-white transition">
+                <i class="fa-solid fa-circle-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Chat messages area -->
+        <div id="ai-chat-messages" class="flex-grow overflow-y-auto p-4 space-y-4 bg-slate-50">
+            <div class="flex gap-2.5 max-w-[85%]">
+                <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm flex-shrink-0">🤖</div>
+                <div class="bg-white p-3 rounded-2xl border border-slate-100 text-xs shadow-sm leading-relaxed text-slate-800">
+                    Chào bạn! Tôi là trợ lý ôn thi chuyên sâu JAC. Nếu có câu hỏi nào khó hiểu hoặc cần phân tích từ vựng, bản vẽ, hãy gõ nội dung hoặc bấm nút "Hỏi trợ lý AI" tại mỗi câu hỏi nhé!
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading spinner -->
+        <div id="ai-chat-loader" class="hidden px-4 py-2 bg-slate-50 flex items-center gap-2 text-xs text-slate-500 font-semibold">
+            <div class="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+            <span>AI đang soạn câu trả lời giải thích...</span>
+        </div>
+
+        <!-- Inputs area -->
+        <div class="p-3 bg-white border-t border-slate-100 flex gap-2">
+            <input type="text" id="ai-chat-input" placeholder="Hỏi thêm về giàn giáo, tiêu chuẩn đai bảo hộ..." class="flex-grow px-3.5 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800" onkeydown="if(event.key === 'Enter') sendAIChatMessage()">
+            <button onclick="sendAIChatMessage()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex-shrink-0"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- Custom alert modal -->
+    <div id="modal-generic-alert" class="hidden fixed inset-0 bg-slate-950/40 backdrop-blur-xs items-center justify-center z-[100] p-4">
+        <div class="bg-white rounded-3xl shadow-2xl p-6 max-w-sm w-full border border-slate-100 text-center space-y-4">
+            <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+                <i class="fa-solid fa-circle-info"></i>
+            </div>
+            <p id="generic-alert-message" class="text-xs font-bold text-slate-700 leading-relaxed">Alert message goes here.</p>
+            <button onclick="closeModal('modal-generic-alert')" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition">Xác Nhận</button>
+        </div>
+    </div>
+
+    <!-- ONE SINGLE SCRIPT BLOCK TO PREVENT INTER-SCRIPT ORDERING RACE CONDITIONS -->
+    <script>
+        const mazziDictionary = {
+            "整理": { kana: "せいり", sino: "Chỉnh Lý", vn: "Sắp xếp, phân loại, vứt bỏ những vật không cần thiết trên công trường", ex: "不要なものを処分すること。 (Xử lý bỏ đi những thanh gỗ vụn hỏng)." },
+            "整頓": { kana: "せいとん", sino: "Chỉnh Đốn", vn: "Sắp đặt ngăn nắp vật dụng cần thiết đúng nơi quy định để dễ lấy", ex: "必要なものを配置して安全を確保する。 (Đặt ngay ngắn kẹp khóa và xà beng đúng giá đỡ)." },
+            "清掃": { kana: "せいそう", sino: "Thanh Tảo", vn: "Quét dọn rác, bụi bẩn bám trên sàn thao tác và máy móc", ex: "作業が終わったら必ず清掃します。 (Hết ca, dọn sạch vữa bê tông bám trên xô trộn)." },
+            "清潔": { kana: "せいけつ", sino: "Thanh Khiết", vn: "Giữ gìn vệ sinh sạch sẽ cơ thể, trang phục bảo hộ và công sở", ex: "常に作業環境をきれいに保つこと。 (Giữ cho phòng thay đồ luôn thoáng mát sạch sẽ)." },
+            "習慣": { kana: "しゅうかん", sino: "Tập Quán", vn: "Hình thành nếp thói quen tốt luôn tuân thủ quy chuẩn an toàn lao động", ex: "安全行動を習慣にしましょう。 (Luyện thói quen kiểm tra khóa cứu sinh mỗi buổi sáng)." },
+            "災害": { kana: "さいがい", sino: "Tai Hại", vn: "Tai nạn lao động bất ngờ phát sinh gây thương tích hoặc hỏng tài sản", ex: "不安全な行動は労働災害につながります。 (Bất cẩn khi lùi xe lu gây tai nạn)." },
+            "避難": { kana: "ひなん", sino: "Tị Nạn", vn: "Sơ tán khẩn cấp ra khỏi khu vực nguy hiểm (như khi có động đất, hỏa hoạn)", ex: "地震の時は速やかに避難場所に移動します。 (Di chuyển ra bãi đất trống phẳng)." },
+            "点検": { kana: "てんけん", sino: "Điểm Kiểm", vn: "Kiểm tra kỹ lưỡng trạng thái an toàn của máy móc dụng cụ trước khi bắt đầu", ex: "使用前に点検を行う。 (Kiểm tra xem đĩa cắt gạch có bị nứt mẻ hay không)." },
+            "危険予知": { kana: "きけんよち", sino: "Nguy Hiểm Dự Tri", vn: "Nhận diện và dự đoán trước các mối nguy tiềm ẩn trước khi tiến hành (KYT)", ex: "朝礼で危険予知活動を実施します。 (Phân tích nguy cơ sập giàn giáo trước khi tháo dỡ)." },
+            "保護具": { kana: "ほごぐ", sino: "Bảo Hộ Cụ", vn: "Trang thiết bị bảo hộ lao động cá nhân bắt buộc", ex: "作業に応じた保護具を着用する。 (Bao gồm mũ, kính, khẩu trang phòng độc, nút tai)." },
+            "避難経路": { kana: "ひなんけいろ", sino: "Tị Nạn Kinh Lộ", vn: "Lối đi thoát hiểm khẩn cấp được quy định khi gặp sự cố hỏa hoạn", ex: "避難経路には荷物を置いてはいけません。 (Luôn giữ cho lối cầu thang bộ trống thoáng)." },
+            "熱中症": { kana: "ねっちゅうしょう", sino: "Nhiệt Trung Chứng", vn: "Say nắng, sốc nhiệt do làm việc nặng liên tục dưới trời nóng gắt", ex: "こまめな水分・塩分補給が有効です。 (Uống nước muối điện giải, nghỉ tại lều mát)." },
+            "酸欠": { kana: "さんけつ", sino: "Toan Khiếm", vn: "Thiếu hụt oxy (nồng độ Oxy dưới 18%) gây ngạt, tử văn dưới hầm hố sâu", ex: "酸素欠乏の恐れがある場所では換気を行います。 (Cần đo nồng độ khí trước khi chui xuống giếng)." },
+            "漏電": { kana: "ろうでん", sino: "Lậu Điện", vn: "Rò rỉ dòng điện ra lớp vỏ kim loại của thiết bị do hỏng vỏ cách điện", ex: "雨の日の漏電による感電を防止する。 (Đặc biệt chú ý máy đầm và dây nguồn kéo lê dưới đất ẩm)." },
+            "足場": { kana: "あしば", sino: "Túc Trường", vn: "Hệ giàn giáo lắp ghép tạm thời để công nhân đi lại thao tác trên cao", ex: "足場の組立てには専門の資格が必要。 (Tháo dỡ giàn giáo vách ngoài tòa nhà)." },
+            "手すり": { kana: "てすり", sino: "Thủ Thủ", vn: "Lan can sắt hoặc gỗ lắp ở rìa sàn công tác để vịn chống ngã", ex: "高さ85cm以上の場所に手すりを設ける。 (Thanh vịn ngăn người ngã nhào ra ngoài)." },
+            "中さん": { kana: "なかさん", sino: "Trung San", vn: "Thanh chắn ngang nằm giữa mâm giáo và thanh lan can tay vịn", ex: "中さんは転落防止의すき間を塞ぎます。 (Ngăn không cho người bị trượt lọt qua khe dầm)." },
+            "幅木": { kana: "はばき", sino: "Phúc Mộc", vn: "Tấm chắn chân cao từ 10cm trở lên ngăn dụng cụ, gạch đá lăn rơi", ex: "工具が落下するのを防ぐ幅木。 (Tấm ván ép định vị sát mép sàn mâm giáo)." },
+            "壁つなぎ": { kana: "かべつなぎ", sino: "Bích Hệ", vn: "Thanh neo giằng cố định giữ giàn giáo bám chắc vào tường bê tông", ex: "足場の倒壊を防ぐために壁つなぎを設置。 (Chống lực gió giật lật đổ hệ giàn giáo)." },
+            "筋交い": { kana: "すじかい", sino: "Thanh Chéo", vn: "Thanh giằng bắt chéo chữ X tăng cứng khả năng chịu lực ngang", ex: "建枠に筋交いをしっかり取り付ける。 (Thanh chống rung vặn vẹo cấu trúc đứng)." },
+            "鉄筋": { kana: "てっきん", sino: "Thiết Cân", vn: "Thanh sắt thép gia cường chịu lực kéo chính của bê tông", ex: "鉄筋の交差部を結束線で固定します。 (Sắt đai, sắt chủ thi công đúng cao trình)." },
+            "結束線": { kana: "けっそくせん", sino: "Kết Thúc Tuyến", vn: "Dây kẽm buộc đen mềm dẻo liên kết các thanh sắt thép", ex: "結束線をハッカーで締め付けます。 (Kẽm buộc mọc 0.8mm kéo căng khóa dầm)." },
+            "コンクリート": { kana: "こんくりーと", sino: "Hỗn Ngưng Thổ", vn: "Bê tông tươi (hỗn hợp xi măng, đá cát dăm và nước)", ex: "打設後のコンクリートを養生します。 (Tưới nước giữ ẩm liên tục)." },
+            "バイブレーター": { kana: "バイブレーター", sino: "Chấn Động Cơ", vn: "Đầm dùi rung bê tông tươi phá bọt khí tăng độ chặt đặc", ex: "バイブレーターで締め固めを十分に行う。 (Tránh đầm chạm sạt cốt thép)." },
+            "型枠": { kana: "かたわく", sino: "Hình Khuôn", vn: "Hệ ván khuôn gỗ cốp pha tạo dáng kết cấu bê tông cứng", ex: "型枠の組み立て位置を点検する。 (Chống neo vững vách ngăn sạt xô)." },
+            "労働災害": { kana: "ろうどうさいがい", sino: "Lao Động Tai Hại", vn: "Tai nạn xảy ra trong quá trình lao động làm việc", ex: "安全対策を怠ると労働災害に繋がります。" },
+            "不安全行動": { kana: "ふあんぜんこうどう", sino: "Bất An Toàn Hành Động", vn: "Hành vi không đảm bảo an toàn của chính bản thân người lao động", ex: "あごひもを締めずに足場を歩く行為は不安全行動です。" },
+            "不安全状態": { kana: "ふあんぜんじょうたい", sino: "Bất An Toàn Trạng Thái", vn: "Trạng thái, môi trường xung quanh không đạt quy chuẩn an toàn", ex: "幅木がない足場は不安全状態です。" },
+            "作業床": { kana: "さぎょうしょう", sino: "Tác Nghiệp Sàng", vn: "Sàn thao tác để đi lại, đặt chân làm việc trên giàn giáo", ex: "作業床に隙間がないか確認してください。" },
+            "開口部": { kana: "かいこうぶ", sino: "Khai Khẩu Bộ", vn: "Ô trống, lỗ mở thông sàn nguy hiểm dễ rơi rớt ngã", ex: "開口部にはしっかり養生と手すりを設置します。" },
+            "水分補給": { kana: "すいぶんほきゅう", sino: "Thủy Phân Bổ Cấp", vn: "Việc uống bổ sung nước đầy đủ định kỳ để tránh mất nước", ex: "熱中症防止にこまめな水分補給が推奨されます。" },
+            "塩分補給": { kana: "えんぶんほきゅう", sino: "Diêm Phân Bổ Cấp", vn: "Việc bổ sung thêm muối muối khoáng khi cơ thể đổ nhiều mồôi", ex: "熱中症飴をなめて塩分補給を行います。" },
+            "酸素欠乏": { kana: "さんそけつぼう", sino: "Toan Tố Khiếm Phạp", vn: "Tình trạng thiếu khí oxy trong các không gian kín (giếng, hầm)", ex: "酸素欠乏の恐れがあるピット内に入る前に測定する。" },
+            "換気": { kana: "かんき", sino: "Hoán Khí", vn: "Sự thông gió, đưa khí sạch vào và đẩy khí tù đọng ra ngoài", ex: "ファンを回して地下作業スペースの換気を行う。" },
+            "アース": { kana: "アース", sino: "Địa Tuyến", vn: "Dây nối tiếp đất để chống giật điện rò rỉ", ex: "電動工具 của plug にはアース線を取り付けます。" },
+            "脚立": { kana: "きゃたつ", sino: "Cước Lập", vn: "Thang gấp chữ A bằng nhôm cứng để thao tác tầm trung", ex: "脚立をまたいで作業してはなりません。" },
+            "はしご": { kana: "はしご", sino: "Thang", vn: "Thang thẳng dốc đứng tựa tường để leo trèo", ex: "はしごの角度は75度に保ち固定します。" },
+            "梁": { kana: "はり", sino: "Lương", vn: "Thanh dầm gánh chịu lực uốn gác ngang lên đầu cột dầm nhà", ex: "梁の上の作業は親綱を使用します。" },
+            "柱": { kana: "はしら", sino: "Trụ", vn: "Cột đứng vững truyền tải trọng thẳng đứng xuống mặt móng", ex: "柱型枠を組立て、建入れを調整します。" },
+            "基礎": { kana: "きそ", sino: "Cơ Sở", vn: "Cơ cấu móng ngầm phân tán lực tòa nhà truyền xuống nền đất", ex: "建物の荷重を支える重要な基礎工事。" },
+            "スラブ": { kana: "スラブ", sino: "Bản Sàn", vn: "Tấm sàn bê tông phẳng trải dài trên dầm ngang", ex: "スラブ配筋は二重に組みます。" },
+            "かぶり厚さ": { kana: "かぶりあつさ", sino: "Phúc Hậu", vn: "Lớp bê tông bảo vệ tính từ mép ngoài đến cốt thép", ex: "かぶり厚さが足りないと、鉄筋が錆びてしまいます。" },
+            "スペーサー": { kana: "スペーサー", sino: "Spacer", vn: "Cục kê (nhựa/bê tông) để định vị độ dày lớp bảo vệ cốt thép", ex: "適切なスペーサーを使用して鉄筋の位置を固定します。" },
+            "コンパネ": { kana: "コンパネ", sino: "Ván Khuôn Gỗ", vn: "Ván cốp pha ép dày phủ phim kháng nước", ex: "コンパネを寸法通りに切断します。" }
+        };
+
+        const staticGakkaQuestions = [
+            {
+                q: "<ruby>整理<rt>せいり</rt></ruby>・<ruby>整頓<rt>せいとん</rt></ruby>は、<ruby>安全<rt>あんぜん</rt></ruby>な<ruby>作業<rt>さぎょう</rt></ruby>を<ruby>行<rt>おこな</rt></ruby>うために、とてもたいせつなことです。",
+                viet: "Sắp xếp và dọn dẹp ngăn nắp là điều cực kỳ quan trọng để tiến hành công việc một cách an toàn.",
+                exp: "「整理」は要らないものを捨てること、「整頓」は必要なものを使いやすい場所に置いておくことです。",
+                expViet: "Chỉnh lý dọn dẹp giúp loại bỏ rác thải nguy hại trên công trường, Chỉnh đốn giúp tìm kiếm dụng cụ nhanh hơn.",
+                choices: ["A. 正しい (Đúng - Là nguyên tắc an toàn cơ bản)", "B. 誤り (Sai - Làm mất thời gian làm việc)", "C. どちらでもよい (Thế nào cũng được)"],
+                ans: "A",
+                cat: "safety"
+            },
+            {
+                q: "<ruby>保護帽<rt>ほごぼう</rt></ruby>（ヘルメット）は、あごひもをゆるめてかぶったほうが、いざというときにすぐはずれて<ruby>安全<rt>あんぜん</rt></ruby>です。",
+                viet: "Mũ bảo hiểm (mũ bảo hộ) nên đội lỏng quai cằm để khi có sự cố dễ dàng tuột ra sẽ an toàn hơn.",
+                exp: "あごひもをしっかり締めないと、転倒・墜落時にヘルメットが脱げて頭部を保護できません。",
+                expViet: "Phải luôn thắt chặt quai cằm mũ bảo hiểm để tránh bị tuột ra khi ngã hoặc có vật rơi vào đầu.",
+                choices: ["A. 正しい (Đúng - Đội lỏng cho thoáng mát)", "B. 誤り (Sai - Bắt buộc phải thắt chặt quai cằm)", "C. 状況によってどちらでもよい (Tùy tình hình)"],
+                ans: "B",
+                cat: "safety"
+            },
+            {
+                q: "<ruby>高所作業<rt>こうしょさぎょう</rt></ruby>をする<ruby>際<rt>さい</rt></ruby>は、<ruby>必ず<rt>かならず</rt></ruby>フルハーネス<ruby>型<rt>がた</rt></ruby><ruby>墜落制止用器具<rt>ついらくせいしようきぐ</rt></ruby>（<ruby>安全帯<rt>あんぜんたい</rt></ruby>）を<ruby>着用<rt>ちゃくよう</rt></ruby>しなければなりません。",
+                viet: "Khi làm việc trên cao, bắt buộc phải đeo thiết bị ngăn ngừa rơi ngã loại toàn thân (đai an toàn toàn thân).",
+                exp: "墜落による労働災害を防ぐため、高所作業ではフルハーネス型安全帯の正しい使用が法令で義務付けられています。",
+                expViet: "Sử dụng đai an toàn toàn thân (Full-harness) giúp bảo vệ tính mạng công nhân khi làm việc từ độ cao trên 2 mét.",
+                choices: ["A. 誤り (Sai - Đeo dây đai bụng là đủ rồi)", "B. 正しい (Đúng - Bắt buộc dùng đai an toàn toàn thân)", "C. 低い場所なら不要 (Thấp thì không cần)"],
+                ans: "B",
+                cat: "scaffolding"
+            },
+            {
+                q: "「ヒヤリハット」とは、<ruby>作業中<rt>さぎょうちゅう</rt></ruby>に<ruby>危険<rt>きけん</rt></ruby>を<ruby>感<rt>かん</rt></ruby>じて「ヒヤリ」としたり「ハッ」としたりした<ruby>出来事<rt>できごと</rt></ruby>のことです。",
+                viet: "Hiyari-hatto (Sự cố cận nguy) là những tình huống suýt xảy ra tai nạn làm chúng ta 'giật mình' hoặc 'thót tim' khi làm việc.",
+                exp: "重大な事故が発生する background には、多くのヒヤリハットが存在します。これらを報告・共有して改善することが安全につながります。",
+                expViet: "Thu thập các báo cáo suýt ngã, suýt đập tay giúp công trường phát hiện ra các điểm mất an toàn để sửa chữa sớm.",
+                choices: ["A. 正しい (Đúng - Cần chia sẻ rộng rãi để phòng ngừa tai nạn)", "B. 誤り (Sai - Đã xảy ra tai nạn đâu mà phải báo cáo)", "C. 恥ずかしいので隠すべき (Nên giấu đi vì xấu hổ)"],
+                ans: "A",
+                cat: "safety"
+            }
+        ];
+
+        const staticJitsugiQuestions = [
+            {
+                q: "【<ruby>安全標識<rt>あんぜんひょうしき</rt></ruby>】下の画像に示す、青い円に白い人物マークが描かれた標識の意味として、正しいものはどれですか。",
+                viet: "【Biển báo an toàn】Ý nghĩa chính xác nhất của biển báo màu xanh tròn có hình người màu trắng bên dưới là gì?",
+                exp: "青い円形の標識は「指示標識」と呼ばれ、作業員に特定の安全防具の着用 or ルール遵守を義務付ける指示を表します。",
+                expViet: "Biển báo hình tròn nền màu xanh lam biểu thị các quy định bắt buộc (Chỉ thị) người lao động phải tuân thủ tại nơi làm việc.",
+                choices: ["A. 〇〇をしなければならない（指示標識 - Chỉ thị bắt buộc thực hiện）", "B. 〇〇をしてはいけない（禁止標識 - Cấm tuyệt đối hành vi）", "C. 危険な場所を知らせる（警告標識 - Cảnh báo nguy hiểm）"],
+                ans: "A",
+                cat: "safety",
+                svg: `<svg viewBox="0 0 100 100" class="w-24 h-24 mx-auto"><circle cx="50" cy="50" r="45" fill="#1e40af"/><circle cx="50" cy="50" r="40" fill="none" stroke="#ffffff" stroke-width="3"/><path d="M40,30 L60,30 L55,55 L45,55 Z" fill="#ffffff" /><circle cx="50" cy="65" r="5" fill="#ffffff"/></svg>`
+            },
+            {
+                q: "【<ruby>高所作業<rt>こうしょさぎょう</rt></ruby>】可搬式作業台（立ち馬）を使用する際、転倒を防ぐために設置すべき重要な安全装置 là gì?",
+                viet: "【An toàn làm việc trên cao】Khi sử dụng sàn thao tác di động chữ A (立ち馬), thiết bị quan trọng nào phải được mở rộng ra để chống đổ lật?",
+                exp: "アウトリガー（張出受け材）は、接地面積を増やすことで作業台が横揺れ等で横転することを物理的に防止するための固定脚脚部突出し部材です。",
+                expViet: "Chân chống phụ (Aoutrigger) giúp mở rộng chân đế, đảm bảo sàn thao tác vững vàng không bị lật đổ khi chịu lực rung lắc.",
+                choices: ["A. アウトリガー（Chân chống phụ mở rộng chống lật）", "B. スパナ（Cờ lê mỏ lết cầm tay）", "C. メッシュシート（Lưới bao che chắn bụi）"],
+                ans: "A",
+                cat: "scaffolding"
+            }
+        ];
+
+        let activeHubType = 'gakka';
+        let activeExamIndex = 1;
+        let activeQuestions = [];
+        let activeQuestionIndex = 0;
+        let activeUserAnswers = {}; 
+        let examTimerInterval = null;
+        let timeRemainingSeconds = 0;
+        
+        let billingShowVietnamese = true;
+        let furiShowActive = true;
+        let showVocabDrawerActive = true;
+        let activeVocabCategory = 'all';
+
+        let activeFlashcardIndex = 0;
+        let isFlashcardFlipped = false;
+
+        let userScoresData = {};
+        let wrongAnswersBook = [];
+
+        // Lab state variables
+        let selectedLabTab = 'quiz';
+        let selectedBase64Image = null;
+        let activeTtsAudio = null;
+
+        // Custom Simulated/Real dynamic quizzes generated via LLMs
+        let activeAiQuizQuestions = [];
+        let activeAiQuizIdx = 0;
+        let activeAiQuizAnswers = {};
+
+        // CRITICAL FIX: Declaring helper function using function syntax to guarantee global hoisting across triggers
+        function getMazziStaticPrompt(term) {
+            return `Bạn là từ điển tiếng Nhật chuyên ngành xây dựng JAC Mazzi. Hãy phân tích từ khóa tiếng Nhật "${term}". Hãy trả về kết quả dưới dạng JSON thuần có cấu trúc chính xác như sau:
+            {
+              "kana": "Phiên âm Hiragana/Katakana chuẩn cách đọc của từ này",
+              "sino": "Âm Hán-Việt tương ứng (nếu có, nếu không ghi Không có)",
+              "definition": "Nghĩa tiếng Việt chuẩn xác và dễ hiểu nhất trong bối cảnh ngành xây dựng công trường Nhật Bản",
+              "example": "Nêu một câu ví dụ tiếng Nhật thực tế sử dụng từ này trên công trường kèm dịch nghĩa tiếng Việt chi tiết"
+            }`;
+        }
+
+        function SeededRandom(seed) {
+            this.seed = seed;
+            this.next = function() {
+                this.seed = (this.seed * 9301 + 49297) % 233280;
+                return this.seed / 233280;
+            };
+            this.nextRange = function(min, max) {
+                return Math.floor(min + this.next() * (max - min));
+            };
+        }
+
+        function generateGakkaSet(setNum) {
+            const rng = new SeededRandom(setNum * 1234);
+            let result = [...staticGakkaQuestions];
+            
+            const cats = ["safety", "tools", "scaffolding", "concrete"];
+            const tools = ["ディスクグラインダー (Máy mài cầm tay)", "<ruby>丸<rt>まる</rt></ruby>のこ (Máy cưa tròn)", "<ruby>高速切断機<rt>こうそくせつだんき</rt></ruby> (Máy cắt sắt)", "ハンマードリル (Máy khoan đục)"];
+            const dangers = ["<ruby>感電<rt>かんでん</rt></ruby> (Điện giật)", "<ruby>飛散<rt>ひさん</rt></ruby>・<ruby>飛来<rt>ひらい</rt></ruby> (Mảnh vỡ bắn vào mắt)", "<ruby>巻<rt>ま</rt></ruby>き<ruby>込<rt>こ</rt></ruby>まれ (Cuốn kẹt tay vào trục xoay)", "<ruby>切断<rt>せつだん</rt></ruby>・<ruby>創傷<rt>そうしょう</rt></ruby> (Cắt vào tay chân)"];
+
+            while (result.length < 40) {
+                const cat = cats[rng.nextRange(0, cats.length)];
+                if (cat === "safety") {
+                    result.push({
+                        q: "<ruby>作業現場<rt>さぎょうげんば</rt></ruby>では、<ruby>熱中症<rt>ねっちゅうしょう</rt></ruby>を<ruby>防<rt>ふせ</rt></ruby>ぐため、こまめに<ruby>水分<rt>すいぶん</rt></ruby>と<ruby>塩分<rt>えんぶん</rt></ruby>を<ruby>補給<rt>ほきゅう</rt></ruby>することがたいせつです。",
+                        viet: "Tại công trường, để phòng chống say nắng (sốc nhiệt), việc bổ sung đầy đủ nước và lượng muối là vô cùng quan trọng.",
+                        exp: "<ruby>高温多湿環境下<rt>こうおんたしつかんきょうか</rt></ruby>の<ruby>建設現場<rt>けんせつげんば</rt></ruby>では、<ruby>多量<rt>たりょう</rt></ruby>の<ruby>発汗<rt>はっかん</rt></ruby>により<ruby>塩分<rt>えんぶん</rt></ruby>と<ruby>水分<rt>すいぶん</rt></ruby>が<ruby>消失<rt>しょうしつ</rt></ruby>します。<ruby>定期的な水分補給<rt>ていきてきなすいぶんほきゅう</rt></ruby>が<ruby>義務<rt>ぎむ</rt></ruby>です。",
+                        expViet: "Say nắng có thể gây tử vong, do đó người lao động phải luôn bổ sung nước điện giải và nghỉ ngơi tại lều có bóng mát.",
+                        choices: ["A. <ruby>正しい<rt>ただしい</rt></ruby> (Đúng - Cần uống nước muối điện giải trước khi khát)", "B. <ruby>誤り<rt>あやまり</rt></ruby> (Sai - Chỉ cần uống nước lọc khi thấy thật mệt)", "C. どちらでもよい (Thế nào cũng được)"],
+                        ans: "A",
+                        cat: "safety"
+                    });
+                } else if (cat === "tools") {
+                    const tool = tools[rng.nextRange(0, tools.length)];
+                    const danger = dangers[rng.nextRange(0, dangers.length)];
+                    result.push({
+                        q: `<ruby>安全<rt>あんぜん</rt></ruby>な<ruby>作業<rt>さぎょう</rt></ruby>のため、${tool}の<ruby>試運転<rt>しうんてん</rt></ruby>を<ruby>行<rt>おこな</rt></ruby>い、${danger}の<ruby>危険<rt>きけん</rt></ruby>がないことを確認します。`,
+                        viet: `Để thao tác an toàn, phải tiến hành chạy thử ${tool} nhằm loại bỏ hoàn toàn các mối nguy mất an toàn như ${danger.replace(/<[^>]*>/g, '')}.`,
+                        exp: "<ruby>高速回転部<rt>こうそくかいてんぶ</rt></ruby>を<ruby>有する電動工具<rt>ゆうするでんどうこうぐ</rt></ruby>の<ruby>使用開始前点検<rt>しようかいしまえてんけん</rt></ruby>では、<ruby>異音<rt>いおん</rt></ruby>やブレがないか<ruby>短い空運転<rt>みじかいからうんてん</rt></ruby>を<ruby>行う<rt>おこなう</rt></ruby>ことが<ruby>基本原則<rt>きほんげんそく</rt></ruby>です。",
+                        expViet: "Thao tác chạy thử máy không tải giúp bạn phát hiện lưỡi cắt mài có bị lỏng ren, mẻ dập hay hở điện hay không.",
+                        choices: ["A. <ruby>正しい<rt>ただしい</rt></ruby> (Đúng - Bắt buộc chạy thử không tải trước ca)", "B. <ruby>誤り<rt>あやまり</rt></ruby> (Sai - Cứ cắm điện chạy trực tiếp đỡ tốn thời gian)", "C. <ruby>指示<rt>しじ</rt></ruby>がなければ<ruby>省略<rt>しょうりゃく</rt></ruby>してよい (Không bảo thì thôi)"],
+                        ans: "A",
+                        cat: "tools"
+                    });
+                } else if (cat === "scaffolding") {
+                    result.push({
+                        q: "<ruby>足場<rt>あしば</rt></ruby>の<ruby>組立て<rt>くみたて</rt></ruby>や<ruby>解体<rt>かいたい</rt></ruby>などの<ruby>高所作業<rt>こうしょさぎょう</rt></ruby>では、あらかじめ<ruby>立入禁止区域<rt>たちいりきんしくいき</rt></ruby>を<ruby>設定<rt>せっち</rt></ruby>する<ruby>必要<rt>ひつよう</rt></ruby>があります。",
+                        viet: "Khi làm việc trên cao như lắp dựng hoặc tháo dỡ giàn giáo, phải thiết lập sẵn vùng cấm người không phận sự đi vào bên dưới.",
+                        exp: "<ruby>足場部材<rt>あしばぶざい</rt></ruby>やボルトの<ruby>落下<rt>らっか</rt></ruby>による<ruby>第三者<rt>だいさんしゃ</rt></ruby>、<ruby>他職種<rt>たしょくしゅ</rt></ruby>への<ruby>飛来落下災害<rt>ひらいらっかさいがい</rt></ruby>を<ruby>防ぐ<rt>ふせぐ</rt></ruby>ため、<ruby>立入禁止区域<rt>たちいりきんしくいき</rt></ruby>の<ruby>設定<rt>せっち</rt></ruby>および<ruby>監視員<rt>かんしいん</rt></ruby>の<ruby>配置<rt>はいち</rt></ruby>を<ruby>法令<rt>ほうれい</rt></ruby>が<ruby>義務付けて<rt>ぎむづけて</rt></ruby>います。",
+                        expViet: "Rào chắn cảnh báo giúp loại bỏ rủi ro vật rơi từ trên cao xuống đập trúng đầu người đi lại bên dưới.",
+                        choices: ["A. <ruby>誤り<rt>あやまり</rt></ruby> (Sai - Chú ý nhìn xuống dưới là được rồi)", "B. <ruby>正しい<rt>ただしい</rt></ruby> (Đúng - Bắt buộc chăng dây rào chắn và có biển báo)", "C. <ruby>特に決まりはない<rt>とくにきまりはない</rt></ruby> (Không có quy định cụ thể)"],
+                        ans: "B",
+                        cat: "scaffolding"
+                    });
+                } else {
+                    result.push({
+                        q: "<ruby>鉄筋<rt>てっきん</rt></ruby>とコンクリートは、お<ruby>互い<rt>たがい</rt></ruby>の<ruby>弱点<rt>じゃくてん</rt></ruby>を<ruby>補い合う<rt>おぎないあu</rt></ruby>ため、あわせて<ruby>強度<rt>きょうど</rt></ruby>の<ruby>強い構造<rt>つよいこうぞう</rt></ruby>をつくります。",
+                        viet: "Sắt cốt thép và bê tông bổ trợ các khuyết điểm cho nhau, tạo dựng nên kết cấu công trình chịu lực cao vững chãi.",
+                        exp: "コンクリートは「<ruby>圧縮力<rt>あっしゅくりょく</rt></ruby>」に<ruby>強く<rt>つよく</rt></ruby>「<ruby>引張力<rt>ひっぱりりょく</rt></ruby>」に<ruby>弱い<rt>よわい</rt></ruby>。<ruby>鉄筋<rt>てっきん</rt></ruby>は「<ruby>引張力<rt>ひっぱりりょく</rt></ruby>」に<ruby>強い<rt>よわい</rt></ruby>。<ruby>両者<rt>りょうしゃ</rt></ruby>が<ruby>結合<rt>けつごう</rt></ruby>して<ruby>非常に強固<rt>ひじょうにきょうこ</rt></ruby>になります。",
+                        expViet: "Sắt chịu lực kéo chính, bê tông chịu lực nén ép chính giúp tòa nhà không gãy đổ khi có rung lắc sạt uốn.",
+                        choices: ["A. <ruby>正しい<rt>ただしい</rt></ruby> (Đúng - Bê tông cốt thép là sự kết hợp cơ học hoàn hảo)", "B. <ruby>誤り<rt>あやまり</rt></ruby> (Sai - Chỉ cần cốt thép là đã chịu được mọi lực rồi)", "C. コンクリートだけで<ruby>強度<rt>きょうど</rt></ruby>は<ruby>足りる<rt>たりる</rt></ruby> (Bê tông thôi là đủ rồi)"],
+                        ans: "A",
+                        cat: "concrete"
+                    });
+                }
+            }
+            return result;
+        }
+
+        function generateJitsugiSet(setNum) {
+            const rng = new SeededRandom(setNum * 9876);
+            let result = [...staticJitsugiQuestions];
+            
+            const cats = ["safety", "tools", "scaffolding", "concrete"];
+            const variables = [85, 45, 10];
+            const categories = ["<ruby>手<rt>て</rt></ruby>すり (Thanh lan can tay vịn)", "<ruby>中<rt>なか</rt></ruby>さん (Thanh lan can giữa mâm)", "<ruby>幅木<rt>はばき</rt></ruby> (Tấm gỗ ván chắn chân ngăn rơi)"];
+
+            while (result.length < 25) {
+                const cat = cats[rng.nextRange(0, cats.length)];
+                if (cat === "scaffolding") {
+                    const idx = rng.nextRange(0, variables.length);
+                    const name = categories[idx];
+                    const val = variables[idx];
+                    result.push({
+                        q: `【<ruby>足場安全<rt>あしばあんぜん</rt></ruby>】<ruby>墜落防止<rt>ついらくぼうし</rt></ruby>・<ruby>落下防止<rt>らっかぼうし</rt></ruby>のため、<ruby>足場<rt>あしば</rt></ruby>に<ruby>設置<rt>せっち</rt></ruby>する「${name}」の<ruby>設置高さ基準<rt>せっちたかさきじゅん</rt></ruby>として、<ruby>正しい<rt>ただしい</rt></ruby>ものはどれですか。`,
+                        viet: `【An toàn giàn giáo】Để phòng chống trượt chân ngã hoặc đá văng rơi vật tư dụng cụ, chiều cao tiêu chuẩn của "${name.replace(/<[^>]*>/g, '')}" lắp đặt là bao nhiêu?`,
+                        exp: `<ruby>労働安全衛生規則<rt>ろうどうあんぜんえいせいきそく</rt></ruby>の<ruby>改定基準<rt>かいていきじゅん</rt></ruby>に<ruby>基づき<rt>もとづき</rt></ruby>、<ruby>足場<rt>あしば</rt></ruby>の<ruby>手すり<rt>てすり</rt></ruby>は<ruby>高さ<rt>たかさ</rt></ruby>85cm<ruby>以上<rt>いじょう</rt></ruby>、<ruby>中<rt>なか</rt></ruby>さんは45cm<ruby>以上<rt>いじょう</rt></ruby>、<ruby>幅木<rt>はばき</rt></ruby>は10cm<ruby>以上<rt>いじょう</rt></ruby>が<ruby>義務付け<rt>ぎむづけ</rt></ruby>られています。`,
+                        expViet: "Ghi nhớ tiêu chuẩn kích thước lắp dựng: Lan can chính ≥ 85cm, thanh phụ chắn ngang giữa mâm ≥ 45cm, thanh chắn gỗ dăm chống rơi gạch đá ở chân ≥ 10cm.",
+                        choices: [
+                            `A. <ruby>床面<rt>ゆかめん</rt></ruby>から ${val}cm <ruby>以上<rt>いじょう</rt></ruby> (Độ cao tiêu chuẩn tối thiểu ${val}cm trở lên)`, 
+                            `B. <ruby>床面<rt>ゆかめん</rt></ruby>から ${val - 5}cm <ruby>以上<rt>いじょう</rt></ruby>`, 
+                            `C. <ruby>特に規定はない<rt>とくにきていはない</rt></ruby> (Không có quy định cụ thể)`
+                        ],
+                        ans: "A",
+                        cat: "scaffolding"
+                    });
+                } else if (cat === "concrete") {
+                    result.push({
+                        q: "【<ruby>打設作業<rt>だせつさぎょう</rt></ruby>】<br>コンクリートの<ruby>打設中<rt>だせつちゅう</rt></ruby>に、バイブレーター（<ruby>棒状振動機<rt>ぼうじょうしんどうき</rt></ruby>）を<ruby>使用<rt>しよう</rt></ruby>する<ruby>場合<rt>ばあい</rt></ruby>の<ruby>正しい方法<rt>ただしいほうほう</rt></ruby>はどれですか。",
+                        viet: "【Thi công bê tông】Khi đổ bê tông tươi và sử dụng đầm dùi rung cốt liệu, thao tác chuẩn xác nhất của thợ nề là gì?",
+                        exp: "バイブレーターは<ruby>垂直<rt>すいちょく</rt></ruby>に<ruby>挿入<rt>そうにゅう</rt></ruby>し、<ruby>挿入間隔<rt>そうにゅうかんかく</rt></ruby>は50cm<ruby>以下<rt>いか</rt></ruby>、<ruby>引き抜く際<rt>ひきぬくさい</rt></ruby>はゆっくりと<ruby>抜いて<rt>ぬいて</rt></ruby><ruby>穴<rt>あな</rt></ruby>を<ruby>残さない<rt>のこさない</rt></ruby>ようにします。",
+                        expViet: "Đầm dùi cắm phương thẳng đứng, khoảng cách các điểm đầm dưới 50cm, rút lên thật từ từ để bê tông lấp đầy bọt khí, tránh rỗng tổ ong.",
+                        choices: ["A. <ruby>横向き<rt>よこむき</rt></ruby>に<ruby>寝かせて広く振動<rt>ねかせてひろくしんどう</rt></ruby>させる (Đầm chéo nằm ngang diện rộng)", "B. <ruby>垂直<rt>すいちょく</rt></ruby>に<ruby>挿入<rt>そうにゅう</rt></ruby>し、ゆっくりと<ruby>引き抜く<rt>ひきぬく</rt></ruby> (Cắm thẳng đứng dầm và rút lên từ từ)", "C. <ruby>鉄筋<rt>てっきん</rt></ruby>に<ruby>直接触れさせて強く振動<rt>ちょくせつふれさせてついうくしんどう</rt></ruby>させる (Dí đầu đầm rung trực tiếp sát vào cốt thép)"],
+                        ans: "B",
+                        cat: "concrete"
+                    });
+                } else if (cat === "tools") {
+                    result.push({
+                        q: "【<ruby>測定工具<rt>そくていこうぐ</rt></ruby>】<br><ruby>鉄筋<rt>てっきん</rt></ruby>の<ruby>配筋検査<rt>はいきんけんさ</rt></ruby>や<ruby>部材寸法<rt>ぶざいすんぽう</rt></ruby>を<ruby>正確<rt>せいかく</rt></ruby>に<ruby>測定<rt>そくてい</rt></ruby>するために<ruby>用いる<rt>もちいる</rt></ruby>、<ruby>金属製<rt>きんぞくせい</rt></ruby>の<ruby>巻尺<rt>まきじゃく</rt></ruby>は<ruby>何<rt>なに</rt></ruby>ですか。",
+                        viet: "【Dụng cụ đo đạc】Tên gọi chính xác của loại thước rút bọc vỏ nhựa bọc thép bỏ túi dùng để đo chiều dài cốt thép hay kích thước cốt pha dầm ngang?",
+                        exp: "コンベックスは、<ruby>建設現場<rt>けんせつげんば</rt></ruby>で<ruby>長さ<rt>ながさ</rt></ruby>を<ruby>測定<rt>そくてい</rt></ruby>する<ruby>際<rt>さい</rt></ruby>に<ruby>最も使用頻度<rt>もっともしようひんど</rt></ruby>の<ruby>高い金属製<rt>たかいきんぞくせい</rt></ruby>のメジャー（<ruby>巻尺<rt>まきじゃく</rt></ruby>）です。<ruby>目盛<rt>めもり</rt></ruby>の<ruby>正確性<rt>せいかくせい</rt></ruby>を<ruby>確認<rt>かんん</rt></ruby>して<ruby>使用<rt>しよう</rt></ruby>します。",
+                        expViet: "Thước cuộn thép (Convex) là dụng cụ đo kích thước vật tư và tim trục xây dựng thông dụng nhất của mọi người thợ.",
+                        choices: ["A. コンベックス（Thước cuộn rút màng thép bỏ túi）", "B. <ruby>水平器<rt>すいへいき</rt></ruby>（Thước bọt thủy cân thăng bằng）", "C. <ruby>下げ振り<rt>さげふり</rt></ruby>（Quả dọi căng dây trục thẳng đứng）"],
+                        ans: "A",
+                        cat: "tools",
+                        svg: `<svg viewBox="0 0 100 100" class="w-20 h-20 mx-auto"><rect x="25" y="25" width="50" height="50" rx="12" fill="#e2e8f0" stroke="#475569" stroke-width="4"/><circle cx="50" cy="50" r="16" fill="#f59e0b"/><rect x="70" y="45" width="12" height="10" fill="#94a3b8" rx="2"/></svg>`
+                    });
+                } else {
+                    result.push({
+                        q: "【<ruby>保護具着用<rt>ほごぐちゃくよう</rt></ruby>】<br><ruby>足場<rt>あしば</rt></ruby>の<ruby>上<rt>うえ</rt></ruby>で<ruby>高所作業<rt>こうしょさぎょう</rt></ruby>を<ruby>行う際<rt>おこなうさい</rt></ruby>、フルハーネス<ruby>型安全帯<rt>がたあんぜんたい</rt></ruby>のランヤードのフックを<ruby>取り付ける正しい位置<rt>とりつけるただしいいち</rt></ruby>はどれですか。",
+                        viet: "【Móc đai an toàn】Khi làm việc trên giàn giáo cao, vị trí móc khóa cùm an toàn (Lanyard hook) của đai bảo hộ toàn thân chính xác nhất ở đâu?",
+                        exp: "<ruby>墜落阻止時<rt>ついらくそしじ</rt></ruby>の<ruby>衝撃<rt>しょうげき</rt></ruby>を<ruby>考慮<rt>こうりょ</rt></ruby>し、フルハーネスのフックは<ruby>腰<rt>こし</rt></ruby>よりも<ruby>高い位置<rt>たかいいち</rt></ruby>、あるいは<ruby>専用<rt>せんよう</rt></ruby>の「<ruby>親綱<rt>おやつな</rt></ruby>」に<ruby>確実<rt>かくじつ</rt></ruby>に<ruby>掛ける必要<rt>かけるひつよう</rt></ruby>があります。",
+                        expViet: "Phải luôn móc khóa đai an toàn ở vị trí cao hơn thắt lưng hoặc móc trực tiếp vào dây cứu sinh chịu lực được căng sẵn.",
+                        choices: ["A. <ruby>腰<rt>こし</rt></ruby>より<ruby>低い位置<rt>ひくいいち</rt></ruby>の<ruby>足場板<rt>あしばいた</rt></ruby> (Thanh mâm móng ở dưới gầm bàn chân)", "B. <ruby>腰<rt>こし</rt></ruby>より<ruby>高い位置<rt>たかいいち</rt></ruby>の<ruby>頑丈<rt>がんじょう</rt></ruby>な<ruby>手すり<rt>てすり</rt></ruby>や<ruby>親綱<rt>おやつな</rt></ruby> (Móc vào lan can chắc chắn cao hơn thắt lưng hoặc dây cứu sinh)", "C. どこでも<ruby>掛けやすい細い針金<rt>かけやすいほそいはりがね</rt></ruby> (Móc đại vào dây kẽm thép mỏng gần nhất)"],
+                        ans: "B",
+                        cat: "safety"
+                    });
+                }
+            }
+            return result;
+        }
+
+        window.onload = function() {
+            loadUserData();
+            setupMazziSelector();
+            renderHubSets();
+            renderVocabDrawer();
+        };
+
+        function showCustomAlert(message) {
+            document.getElementById('generic-alert-message').innerText = message;
+            document.getElementById('modal-generic-alert').classList.remove('hidden');
+            document.getElementById('modal-generic-alert').classList.add('flex');
+        }
+
+        function loadUserData() {
+            const localData = localStorage.getItem('JAC_PRO_USER_SCORES_V5');
+            if (localData) {
+                userScoresData = JSON.parse(localData);
+            } else {
+                userScoresData = {
+                    "gakka-1": 45,
+                    "gakka-2": 70
+                };
+            }
+            recalculateCategoryDiagnostics();
+            updateGlobalStatsBar();
+        }
+
+        function saveUserData() {
+            localStorage.setItem('JAC_PRO_USER_SCORES_V5', JSON.stringify(userScoresData));
+            recalculateCategoryDiagnostics();
+            updateGlobalStatsBar();
+        }
+
+        function recalculateCategoryDiagnostics() {
+            const categories = ["safety", "tools", "scaffolding", "concrete"];
+            const keys = Object.keys(userScoresData);
+            if (keys.length === 0) {
+                categories.forEach(c => {
+                    document.getElementById(`diag-pct-${c === "scaffolding" ? "scaff" : c}`).innerText = "0%";
+                    document.getElementById(`diag-bar-${c === "scaffolding" ? "scaff" : c}`).style.width = "0%";
+                });
+                return;
+            }
+
+            let mockWeights = { safety: 0, tools: 0, scaffolding: 0, concrete: 0 };
+            keys.forEach(k => {
+                const s = userScoresData[k];
+                mockWeights.safety += s >= 65 ? 85 : 45;
+                mockWeights.tools += s >= 65 ? 75 : 40;
+                mockWeights.scaffolding += s >= 65 ? 90 : 35;
+                mockWeights.concrete += s >= 65 ? 80 : 30;
+            });
+
+            categories.forEach(c => {
+                const rawVal = Math.min(Math.round(mockWeights[c] / keys.length), 100);
+                const tag = c === "scaffolding" ? "scaff" : c;
+                document.getElementById(`diag-pct-${tag}`).innerText = `${rawVal}%`;
+                document.getElementById(`diag-bar-${tag}`).style.width = `${rawVal}%`;
+            });
+
+            let sorted = categories.map(c => ({
+                cat: c,
+                val: Math.min(Math.round(mockWeights[c] / keys.length), 100)
+            })).sort((a,b) => a.val - b.val);
+
+            const catMap = {
+                safety: "An Toàn Lao Động 🛡️",
+                tools: "Sử Dụng Thiết Bị 🛠️",
+                scaffolding: "Giàn Giáo Cao Trình 🪜",
+                concrete: "Bê Tông Cốt Thép 🧱"
+            };
+            const weakestText = sorted[0] ? `${catMap[sorted[0].cat]} (${sorted[0].val}%)` : "Tính toán...";
+            document.getElementById('ai-quiz-weakest-tag').innerText = "Trọng tâm: " + weakestText;
+            document.getElementById('ai-quiz-weakest-tag').setAttribute('data-weakest', sorted[0] ? sorted[0].cat : "safety");
+        }
+
+        function updateGlobalStatsBar() {
+            const keys = Object.keys(userScoresData);
+            const totalCount = keys.length;
+            document.getElementById('stat-completed-desc').innerText = `${totalCount} / 100`;
+
+            if (totalCount > 0) {
+                let sum = 0;
+                let passedCount = 0;
+                keys.forEach(k => {
+                    const sc = userScoresData[k];
+                    sum += sc;
+                    if (sc >= 65) passedCount++;
+                });
+                const avg = Math.round(sum / totalCount);
+                document.getElementById('stat-avg-desc').innerText = `${avg}%`;
+
+                let rank = "Kỹ sư Tập sự";
+                if (passedCount >= 40) rank = "Huyền Thoại JAC 👑";
+                else if (passedCount >= 20) rank = "Đốc Công Công Trường 🏗️";
+                else if (passedCount >= 5) rank = "Thợ Lành Nghề 👷";
+                document.getElementById('stat-rank-desc').innerText = rank;
+            } else {
+                document.getElementById('stat-avg-desc').innerText = "0%";
+                document.getElementById('stat-rank-desc').innerText = "Kỹ sư Tập sự";
+            }
+        }
+
+        function switchExamHub(type) {
+            activeHubType = type;
+            const btnG = document.getElementById('tab-btn-gakka');
+            const btnJ = document.getElementById('tab-btn-jitsugi');
+
+            if (type === 'gakka') {
+                btnG.className = "px-5 py-2.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-950 shadow-sm flex items-center gap-2";
+                btnJ.className = "px-5 py-2.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-950 flex items-center gap-2";
+            } else {
+                btnG.className = "px-5 py-2.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-950 flex items-center gap-2";
+                btnJ.className = "px-5 py-2.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-950 shadow-sm flex items-center gap-2";
+            }
+            renderHubSets();
+        }
+
+        function renderHubSets() {
+            const container = document.getElementById('sets-grid-container');
+            container.innerHTML = '';
+            const filterVal = document.getElementById('set-filter-select').value;
+
+            for (let i = 1; i <= 50; i++) {
+                const scoreKey = `${activeHubType}-${i}`;
+                const bestScore = userScoresData[scoreKey];
+                const hasAttempted = bestScore !== undefined;
+                const isPassed = hasAttempted && bestScore >= 65;
+
+                if (filterVal === 'unattempted' && hasAttempted) continue;
+                if (filterVal === 'passed' && !isPassed) continue;
+                if (filterVal === 'failed' && (!hasAttempted || isPassed)) continue;
+
+                const card = document.createElement('div');
+                card.className = `p-4.5 rounded-2xl border transition duration-200 flex flex-col justify-between h-40 ${
+                    isPassed 
+                        ? 'bg-emerald-50/40 border-emerald-100 hover:border-emerald-300 shadow-sm' 
+                        : hasAttempted 
+                            ? 'bg-rose-50/40 border-rose-100 hover:border-rose-300' 
+                            : 'bg-slate-50/60 border-slate-200 hover:border-slate-300'
+                }`;
+
+                let badge = `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-200 text-slate-600">Chưa làm</span>`;
+                if (hasAttempted) {
+                    badge = isPassed 
+                        ? `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800"><i class="fa-solid fa-circle-check"></i> Đạt (${bestScore}%)</span>`
+                        : `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-100 text-rose-800"><i class="fa-solid fa-circle-xmark"></i> Hỏng (${bestScore}%)</span>`;
+                }
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-xs font-black text-slate-400">SET ${String(i).padStart(2, '0')}</span>
+                            ${badge}
+                        </div>
+                        <h4 class="font-extrabold text-xs text-slate-800 leading-tight">Bộ Đề Sát Hạch Số ${i}</h4>
+                        <p class="text-[10px] text-slate-400 mt-1">${activeHubType === 'gakka' ? '40 câu • 60 phút' : '25 câu • 40 phút'}</p>
+                    </div>
+                    <button onclick="startSpecificExam('${activeHubType}', ${i})" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black transition-all">
+                        Khởi động đề
+                    </button>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        function filterSets() {
+            renderHubSets();
+        }
+
+        function startSpecificExam(type, index) {
+            activeHubType = type;
+            activeExamIndex = index;
+            activeUserAnswers = {};
+            activeQuestionIndex = 0;
+
+            if (type === 'gakka') {
+                activeQuestions = generateGakkaSet(index);
+                timeRemainingSeconds = 60 * 60; 
+                document.getElementById('active-exam-badge').className = "px-3 py-1.5 rounded-xl text-xs font-extrabold text-white bg-indigo-600";
+            } else {
+                activeQuestions = generateJitsugiSet(index);
+                timeRemainingSeconds = 40 * 60; 
+                document.getElementById('active-exam-badge').className = "px-3 py-1.5 rounded-xl text-xs font-extrabold text-white bg-emerald-600";
+            }
+
+            document.getElementById('active-exam-badge').innerText = `${type === 'gakka' ? 'Lý Thuyết 学科' : 'Thực Hành 実技'} - SET ${String(index).padStart(2, '0')}`;
+            document.getElementById('total-q-count').innerText = activeQuestions.length;
+
+            switchView('exam-view');
+            filterVocabList();
+            renderIndicesGrid();
+            renderCurrentQuestion();
+            startExamClock();
+        }
+
+        function switchView(viewId) {
+            const views = ['dashboard-view', 'exam-view', 'ai-lab-view', 'result-view'];
+            views.forEach(v => {
+                document.getElementById(v).classList.add('hidden');
+            });
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        function startExamClock() {
+            clearInterval(examTimerInterval);
+            updateTimerDisplay();
+            examTimerInterval = setInterval(() => {
+                timeRemainingSeconds--;
+                if (timeRemainingSeconds <= 0) {
+                    clearInterval(examTimerInterval);
+                    document.getElementById('modal-timeout-alert').classList.remove('hidden');
+                    document.getElementById('modal-timeout-alert').classList.add('flex');
+                } else {
+                    updateTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const min = Math.floor(timeRemainingSeconds / 60);
+            const sec = timeRemainingSeconds % 60;
+            document.getElementById('exam-timer-display').innerText = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+        }
+
+        function renderIndicesGrid() {
+            const container = document.getElementById('exam-indices-grid');
+            container.innerHTML = '';
+            activeQuestions.forEach((_, idx) => {
+                const node = document.createElement('button');
+                node.id = `idx-node-${idx}`;
+                node.innerText = idx + 1;
+                node.onclick = () => jumpToQuestion(idx);
+                node.className = getIndexNodeStyle(idx);
+                container.appendChild(node);
+            });
+        }
+
+        function getIndexNodeStyle(idx) {
+            let base = "h-9 w-9 text-xs font-bold rounded-xl flex items-center justify-center transition ";
+            if (idx === activeQuestionIndex) {
+                return base + "bg-indigo-50 border-2 border-indigo-600 text-indigo-700 ring-2 ring-indigo-100";
+            } else if (activeUserAnswers[idx] !== undefined) {
+                return base + "bg-indigo-600 text-white shadow-sm";
+            } else {
+                return base + "bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100";
+            }
+        }
+
+        function renderCurrentQuestion() {
+            const q = activeQuestions[activeQuestionIndex];
+            document.getElementById('current-q-num').innerText = activeQuestionIndex + 1;
+
+            const catMap = { safety: "🛡️ An Toàn & Sức Khỏe", tools: "🛠️ Sử Dụng Dụng Cụ", scaffolding: "🪜 Giàn Giáo Cao Trình", concrete: "🧱 Bê Tông Cốt Thép" };
+            document.getElementById('question-category-tag').innerText = catMap[q.cat] || "XÂY DỰNG CHUYÊN NGÀNH";
+
+            const pct = ((activeQuestionIndex + 1) / activeQuestions.length) * 100;
+            document.getElementById('exam-progress-bar').style.width = `${pct}%`;
+
+            document.getElementById('active-question-text').innerHTML = `
+                <p class="font-black text-base md:text-lg text-slate-900 leading-relaxed">Q${activeQuestionIndex + 1}. ${q.q}</p>
+                <p class="text-xs text-indigo-600 font-bold vietnamese-translation"><i class="fa-solid fa-language text-sm"></i> ${q.viet}</p>
+            `;
+
+            const visualBox = document.getElementById('active-question-visuals');
+            if (q.svg) {
+                visualBox.innerHTML = q.svg;
+                visualBox.classList.remove('hidden');
+                visualBox.classList.add('flex');
+            } else {
+                visualBox.classList.add('hidden');
+                visualBox.classList.remove('flex');
+            }
+
+            const listContainer = document.getElementById('active-options-list');
+            listContainer.innerHTML = '';
+
+            q.choices.forEach(choiceText => {
+                const charVal = choiceText.trim().charAt(0);
+                const isSelected = activeUserAnswers[activeQuestionIndex] === charVal;
+
+                const wrapper = document.createElement('div');
+                wrapper.onclick = () => selectOption(charVal);
+                wrapper.className = `p-4 rounded-2xl border-2 cursor-pointer transition flex justify-between items-center ${
+                    isSelected 
+                        ? 'border-indigo-600 bg-indigo-50/50 text-indigo-950 font-bold' 
+                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                }`;
+
+                let contentText = choiceText;
+                let vnText = "";
+                if (choiceText.includes('(')) {
+                    const parts = choiceText.split('(');
+                    contentText = parts[0];
+                    vnText = '(' + parts.slice(1).join('(');
+                }
+
+                wrapper.innerHTML = `
+                    <div class="text-xs md:text-sm">
+                        <span>${contentText}</span>
+                        ${vnText ? `<span class="block text-[11px] text-slate-500 font-medium vietnamese-translation mt-0.5">${vnText}</span>` : ''}
+                    </div>
+                    <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'}">
+                        ${isSelected ? '<span class="w-1.5 h-1.5 rounded-full bg-white"></span>' : ''}
+                    </div>
+                `;
+                listContainer.appendChild(wrapper);
+            });
+
+            document.getElementById('btn-question-prev').disabled = activeQuestionIndex === 0;
+            document.getElementById('btn-question-prev').className = activeQuestionIndex === 0
+                ? "px-5 py-3 bg-slate-50 text-slate-300 font-bold rounded-2xl text-xs cursor-not-allowed flex items-center gap-2"
+                : "px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-xs transition flex items-center gap-2";
+
+            const isLast = activeQuestionIndex === activeQuestions.length - 1;
+            if (isLast) {
+                document.getElementById('btn-question-next').classList.add('hidden');
+                document.getElementById('btn-question-submit').classList.remove('hidden');
+            } else {
+                document.getElementById('btn-question-next').classList.remove('hidden');
+                document.getElementById('btn-question-submit').classList.add('hidden');
+            }
+
+            activeQuestions.forEach((_, idx) => {
+                const node = document.getElementById(`idx-node-${idx}`);
+                if (node) node.className = getIndexNodeStyle(idx);
+            });
+        }
+
+        function selectOption(charVal) {
+            activeUserAnswers[activeQuestionIndex] = charVal;
+            renderCurrentQuestion();
+        }
+
+        function navigateQuestions(step) {
+            const dest = activeQuestionIndex + step;
+            if (dest >= 0 && dest < activeQuestions.length) {
+                activeQuestionIndex = dest;
+                renderCurrentQuestion();
+            }
+        }
+
+        function jumpToQuestion(idx) {
+            activeQuestionIndex = idx;
+            renderCurrentQuestion();
+        }
+
+        function triggerSubmitModal() {
+            const total = activeQuestions.length;
+            const done = Object.keys(activeUserAnswers).length;
+            const left = total - done;
+
+            if (left > 0) {
+                document.getElementById('submit-confirm-text').innerText = `Cảnh báo: Bạn vẫn còn bỏ trống ${left} câu hỏi chưa hoàn thành trả lời!`;
+            } else {
+                document.getElementById('submit-confirm-text').innerText = "Tuyệt vời! Bạn đã hoàn thành lựa chọn đầy đủ tất cả câu hỏi.";
+            }
+
+            document.getElementById('modal-submit-confirm').classList.remove('hidden');
+            document.getElementById('modal-submit-confirm').classList.add('flex');
+        }
+
+        function submitExamNow() {
+            closeModal('modal-submit-confirm');
+            closeModal('modal-timeout-alert');
+            clearInterval(examTimerInterval);
+
+            let correct = 0;
+            activeQuestions.forEach((q, idx) => {
+                const isCorrect = activeUserAnswers[idx] === q.ans;
+                if (isCorrect) {
+                    correct++;
+                }
+            });
+
+            const total = activeQuestions.length;
+            const percent = Math.round((correct / total) * 100);
+            const isPassed = percent >= 65;
+
+            const scoreKey = `${activeHubType}-${activeExamIndex}`;
+            if (!userScoresData[scoreKey] || userScoresData[scoreKey] < percent) {
+                userScoresData[scoreKey] = percent;
+            }
+
+            saveUserData();
+
+            document.getElementById('result-correct-count').innerText = correct;
+            document.getElementById('result-total-count').innerText = total;
+            document.getElementById('result-percentage').innerText = `${percent}%`;
+
+            const seal = document.getElementById('result-emoji-seal');
+            const title = document.getElementById('result-verdict-title');
+            const subtitle = document.getElementById('result-verdict-subtitle');
+            const badge = document.getElementById('result-badge-status');
+
+            if (isPassed) {
+                seal.innerText = "🏆";
+                seal.className = "w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 text-5xl shadow-inner border border-emerald-100";
+                title.innerText = "合格おめでとうございます！";
+                subtitle.innerText = "Chúc mừng bạn đã vượt qua bài thi xuất sắc! Giữ vững phong độ.";
+                badge.innerText = "ĐẠT";
+                badge.className = "text-xl font-black mt-2 text-emerald-600";
+            } else {
+                seal.innerText = "⚠️";
+                seal.className = "w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-4 text-5xl shadow-inner border border-rose-100";
+                title.innerText = "不合格、もっと頑張りましょう！";
+                subtitle.innerText = "Rất tiếc điểm của bạn chưa đạt yêu cầu tối thiểu (65%). Hãy xem kỹ phần chữa giải thích bên dưới.";
+                badge.innerText = "CHƯA ĐẠT";
+                badge.className = "text-xl font-black mt-2 text-rose-600";
+            }
+
+            document.getElementById('btn-re-exam').onclick = () => startSpecificExam(activeHubType, activeExamIndex);
+
+            populatePostExamVocabulary();
+            populateResultReview();
+
+            switchView('result-view');
+        }
+
+        const vocabListDb = Object.keys(mazziDictionary).map(key => {
+            return {
+                word: key,
+                kana: mazziDictionary[key].kana,
+                sino: mazziDictionary[key].sino,
+                vn: mazziDictionary[key].vn,
+                cat: ["整理", "整頓", "清掃", "清潔", "習慣", "災害", "避難", "点検", "危険予知", "避難経路", "救急箱", "熱中症", "酸欠", "一酸化炭素", "報告", "連絡", "相談", "立入禁止", "安全通路", "作業中止", "高所作業", "墜落", "転落", "感電", "救護", "二次災害", "安全管理者", "作業長"].includes(key) ? "safety" :
+                     ["保護帽", "安全靴", "安全帯", "親綱", "足場", "手すり", "中さん", "幅木", "クレーン", "脚立", "はしご", "壁つなぎ", "コンベックス", "ハンマードリル", "グラインダー", "スパナ", "ハッカー", "コテ", "単管パイプ", "クランプ", "ジョイント", "親綱支柱", "メッシュシート", "建枠", "ジャッキベース"].includes(key) ? "construction" : "material",
+                ex: mazziDictionary[key].ex
+            };
+        });
+
+        function openFlashcardModal() {
+            activeFlashcardIndex = 0;
+            isFlashcardFlipped = false;
+            document.getElementById('modal-flashcard').classList.remove('hidden');
+            document.getElementById('modal-flashcard').classList.add('flex');
+            renderActiveFlashcard();
+        }
+
+        function flipActiveCard() {
+            isFlashcardFlipped = !isFlashcardFlipped;
+            const inner = document.getElementById('flashcard-inner');
+            if (isFlashcardFlipped) {
+                inner.classList.add('flip-card-flipped');
+            } else {
+                inner.classList.remove('flip-card-flipped');
+            }
+        }
+
+        function renderActiveFlashcard() {
+            isFlashcardFlipped = false;
+            document.getElementById('flashcard-inner').classList.remove('flip-card-flipped');
+
+            const v = vocabListDb[activeFlashcardIndex];
+            document.getElementById('fc-word-front').innerText = v.word;
+            document.getElementById('fc-kana-front').innerText = v.kana;
+
+            document.getElementById('fc-sino-back').innerText = v.sino;
+            document.getElementById('fc-vn-back').innerText = v.vn;
+            document.getElementById('fc-ex-back').innerText = v.ex || '';
+
+            document.getElementById('fc-current-index').innerText = activeFlashcardIndex + 1;
+            document.getElementById('fc-total-index').innerText = vocabListDb.length;
+        }
+
+        function navigateFlashcard(step) {
+            const dest = activeFlashcardIndex + step;
+            if (dest >= 0 && dest < vocabListDb.length) {
+                activeFlashcardIndex = dest;
+                renderActiveFlashcard();
+            }
+        }
+
+        function playFcSpeech() {
+            const v = vocabListDb[activeFlashcardIndex];
+            speakJapanese(v.kana);
+        }
+
+        function setupMazziSelector() {
+            const bubble = document.getElementById('mazzi-floating-btn');
+
+            document.addEventListener('selectionchange', () => {
+                const sel = window.getSelection();
+                const selText = sel.toString().trim();
+                const hasJapanese = /[\u3000-\u303F]|[\u3040-\u309F]|[\u30A0-\u30FF]|[\uFF00-\uFFEF]|[\u4E00-\u9FAF]/g.test(selText);
+
+                if (selText.length > 0 && selText.length < 35 && hasJapanese) {
+                    const range = sel.getRangeAt(0);
+                    const rect = range.getBoundingClientRect();
+
+                    bubble.style.top = `${window.scrollY + rect.top - 45}px`;
+                    bubble.style.left = `${window.scrollX + rect.left + (rect.width / 2) - 50}px`;
+                    bubble.classList.remove('hidden');
+                    bubble.classList.add('flex');
+                } else {
+                    bubble.classList.add('hidden');
+                    bubble.classList.remove('flex');
+                }
+            });
+
+            bubble.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            bubble.addEventListener('click', () => {
+                const selText = window.getSelection().toString().trim();
+                triggerMazziLookup(selText);
+                bubble.classList.add('hidden');
+                bubble.classList.remove('flex');
+            });
+        }
+    </script>
+
+    <script>
+        function switchLabTab(tabId) {
+            selectedLabTab = tabId;
+            const tabs = ['quiz', 'image', 'tts'];
+            tabs.forEach(t => {
+                document.getElementById(`lab-tab-${t}`).classList.add('hidden');
+                
+                const btn = document.getElementById(`btn-lab-${t}`);
+                btn.className = "flex items-center gap-3 p-4 rounded-2xl border-2 border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-left font-bold transition";
+            });
+
+            document.getElementById(`lab-tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`btn-lab-${tabId}`);
+            
+            let colorTheme = "border-indigo-600 bg-indigo-50 text-indigo-950";
+            if (tabId === 'image') colorTheme = "border-emerald-600 bg-emerald-50 text-emerald-950";
+            if (tabId === 'tts') colorTheme = "border-rose-600 bg-rose-50 text-rose-950";
+
+            activeBtn.className = `flex items-center gap-3 p-4 rounded-2xl border-2 ${colorTheme} text-left font-bold transition`;
+        }
+
+        async function generateAiQuiz() {
+            const apiKey = localStorage.getItem('JAC_PREP_API_KEY') || "";
+            if (!apiKey) {
+                document.getElementById('ai-quiz-warning-box').classList.remove('hidden');
+                showCustomAlert("Vui lòng cấu hình API Key để kích hoạt Trình Sinh Đề Tự Động bằng AI.");
+                return;
+            } else {
+                document.getElementById('ai-quiz-warning-box').classList.add('hidden');
+            }
+
+            document.getElementById('ai-quiz-setup').classList.add('hidden');
+            document.getElementById('ai-quiz-loader').classList.remove('hidden');
+
+            const weakestCategory = document.getElementById('ai-quiz-weakest-tag').getAttribute('data-weakest') || "safety";
+            const categoryPromptText = {
+                safety: "An toàn vệ sinh lao động và sức khỏe công trường",
+                tools: "Sử dụng thiết bị, dụng cụ cầm tay an toàn",
+                scaffolding: "Giàn giáo, giá đỡ, thang dốc leo cao",
+                concrete: "Ván khuôn, bê tông tươi và gia cố cốt thép dầm sàn"
+            }[weakestCategory];
+
+            const modelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            const prompt = `Hãy đóng vai giảng viên cao cấp JAC của Nhật Bản. Tạo 5 câu hỏi trắc nghiệm tiếng Nhật chuyên ngành xây dựng tập trung 100% vào chuyên đề: "${categoryPromptText}".
+            Yêu cầu:
+            1. Các câu hỏi viết bằng tiếng Nhật chuẩn, có phiên âm Hiragana trên đầu chữ Kanji sử dụng thẻ <ruby> (Ví dụ: <ruby>整理<rt>せいり</rt></ruby>).
+            2. Có bản dịch nghĩa câu hỏi sang tiếng Việt.
+            3. Cung cấp 3 phương án lựa chọn, ký hiệu bắt đầu bằng A, B, C.
+            4. Chỉ ra ký hiệu đáp án đúng (A, B, hoặc C).
+            5. Cung cấp giải thích tiếng Nhật và tiếng Việt chi tiết.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: "Bạn là trợ lý JAC chuyên tạo câu hỏi trắc nghiệm tiếng Nhật có ruby furigana. Chỉ trả về dữ liệu định dạng JSON hợp lệ." }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            questions: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        q: { type: "STRING", description: "Câu hỏi tiếng Nhật bọc thẻ ruby furigana hoàn chỉnh" },
+                                        viet: { type: "STRING", description: "Bản dịch nghĩa câu hỏi sang tiếng Việt" },
+                                        choices: {
+                                            type: "ARRAY",
+                                            items: { type: "STRING" },
+                                            description: "Danh sách 3 phương án lựa chọn dạng A., B., C."
+                                        },
+                                        ans: { type: "STRING", description: "Đáp án đúng chỉ chứa chữ cái A, B hoặc C" },
+                                        exp: { type: "STRING", description: "Chữa giải thích chi tiết bằng tiếng Nhật" },
+                                        expViet: { type: "STRING", description: "Chữa giải thích chi tiết bằng tiếng Việt" }
+                                    },
+                                    required: ["q", "viet", "choices", "ans", "exp", "expViet"]
+                                }
+                            }
+                        },
+                        required: ["questions"]
+                    }
+                }
+            };
+
+            let success = false;
+            let questionsData = [];
+            let delay = 1000;
+
+            for (let attempt = 1; attempt <= 4; attempt++) {
+                try {
+                    const response = await fetch(modelUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (rawText) {
+                            const parsed = JSON.parse(rawText);
+                            questionsData = parsed.questions || [];
+                            if (questionsData.length > 0) {
+                                success = true;
+                                break;
+                            }
+                        }
+                    }
+                } catch (err) {
+                    // silent backoff
+                }
+                if (attempt < 4) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+
+            document.getElementById('ai-quiz-loader').classList.add('hidden');
+
+            if (success && questionsData.length > 0) {
+                activeAiQuizQuestions = questionsData;
+                activeAiQuizIdx = 0;
+                activeAiQuizAnswers = {};
+                
+                document.getElementById('ai-quiz-runner').classList.remove('hidden');
+                renderAiQuizQuestion();
+            } else {
+                document.getElementById('ai-quiz-setup').classList.remove('hidden');
+                showCustomAlert("Hiện tại hệ thống bận hoặc API Key không hợp lệ. Vui lòng thử lại sau.");
+            }
+        }
+
+        function renderAiQuizQuestion() {
+            const q = activeAiQuizQuestions[activeAiQuizIdx];
+            document.getElementById('ai-quiz-counter').innerText = `Câu ${activeAiQuizIdx + 1} / 5`;
+
+            document.getElementById('ai-quiz-question-box').innerHTML = `
+                <p class="font-extrabold text-sm md:text-base text-slate-900 leading-relaxed">${q.q}</p>
+                <p class="text-xs text-indigo-700 font-bold mt-1 leading-relaxed"><i class="fa-solid fa-language"></i> ${q.viet}</p>
+            `;
+
+            const choicesBox = document.getElementById('ai-quiz-options-box');
+            choicesBox.innerHTML = '';
+
+            q.choices.forEach(choice => {
+                const charVal = choice.trim().charAt(0);
+                const isSelected = activeAiQuizAnswers[activeAiQuizIdx] === charVal;
+
+                const wrapper = document.createElement('div');
+                wrapper.onclick = () => selectAiQuizOption(charVal);
+                wrapper.className = `p-3.5 rounded-xl border-2 cursor-pointer transition flex justify-between items-center text-xs ${
+                    isSelected 
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-950 font-bold' 
+                        : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                }`;
+
+                wrapper.innerHTML = `
+                    <span>${choice}</span>
+                    <div class="w-4 h-4 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300'}">
+                        ${isSelected ? '<span class="w-1.5 h-1.5 rounded-full bg-white"></span>' : ''}
+                    </div>
+                `;
+                choicesBox.appendChild(wrapper);
+            });
+
+            const isLast = activeAiQuizIdx === activeAiQuizQuestions.length - 1;
+            const nextBtn = document.getElementById('btn-ai-quiz-next');
+            if (activeAiQuizAnswers[activeAiQuizIdx] !== undefined) {
+                nextBtn.classList.remove('hidden');
+                nextBtn.innerText = isLast ? "Nộp Đề AI" : "Tiếp theo \u2192";
+                nextBtn.onclick = isLast ? submitAiQuiz : () => { activeAiQuizIdx++; renderAiQuizQuestion(); };
+            } else {
+                nextBtn.classList.add('hidden');
+            }
+        }
+
+        function selectAiQuizOption(charVal) {
+            activeAiQuizAnswers[activeAiQuizIdx] = charVal;
+            renderAiQuizQuestion();
+        }
+
+        function submitAiQuiz() {
+            document.getElementById('ai-quiz-runner').classList.add('hidden');
+            
+            let correctCount = 0;
+            activeAiQuizQuestions.forEach((q, idx) => {
+                if (activeAiQuizAnswers[idx] === q.ans) {
+                    correctCount++;
+                }
+            });
+
+            document.getElementById('ai-quiz-score-num').innerText = `${correctCount} / 5 ĐÚNG`;
+            document.getElementById('ai-quiz-result').classList.remove('hidden');
+        }
+
+        function resetAiQuizSetup() {
+            document.getElementById('ai-quiz-result').classList.add('hidden');
+            document.getElementById('ai-quiz-setup').classList.remove('hidden');
+        }
+
+        function exitAiQuiz() {
+            document.getElementById('ai-quiz-runner').classList.add('hidden');
+            document.getElementById('ai-quiz-setup').classList.remove('hidden');
+        }
+
+        function handleAiImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                selectedBase64Image = e.target.result.split(',')[1];
+                
+                document.getElementById('ai-image-preview-img').src = e.target.result;
+                document.getElementById('ai-image-preview-name').innerText = file.name;
+                document.getElementById('ai-image-preview-box').classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function selectMockImage(type) {
+            let base64Mock = "";
+            let name = "";
+            let displaySrc = "";
+
+            if (type === 'blueprint') {
+                name = "Bản vẽ dầm bê tông cốt thép mộc (RC Foundation).png";
+                displaySrc = "https://placehold.co/400x300/1e293b/ffffff?text=RC+Foundation+Blueprint";
+                base64Mock = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+            } else {
+                name = "Đai an toàn toàn thân (Full Harness Shock Absorber).png";
+                displaySrc = "https://placehold.co/400x300/0f172a/ffffff?text=Safety+Harness+Model";
+                base64Mock = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+            }
+
+            selectedBase64Image = base64Mock;
+            document.getElementById('ai-image-preview-img').src = displaySrc;
+            document.getElementById('ai-image-preview-name').innerText = name;
+            document.getElementById('ai-image-preview-box').classList.remove('hidden');
+        }
+
+        async function analyzeSelectedImage() {
+            const apiKey = localStorage.getItem('JAC_PREP_API_KEY') || "";
+            if (!apiKey) {
+                showCustomAlert("Vui lòng cấu hình API Key ở thanh công cụ phía trên để sử dụng Gemini Vision phân tích hình ảnh.");
+                return;
+            }
+
+            document.getElementById('ai-image-loader').classList.remove('hidden');
+            document.getElementById('ai-image-output-content').innerText = "";
+
+            const promptText = "Phân tích hình ảnh bản vẽ/thiết bị xây dựng Nhật Bản này. Hãy chỉ ra tên gọi tiếng Nhật chuẩn, phiên âm Furigana, âm Hán Việt, các thông số an toàn kỹ thuật quan trọng của nó và các từ khóa tiếng Nhật xuất hiện trong ảnh.";
+            const modelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{
+                    role: "user",
+                    parts: [
+                        { text: promptText },
+                        {
+                            inlineData: {
+                                mimeType: "image/png",
+                                data: selectedBase64Image
+                            }
+                        }
+                    ]
+                }]
+            };
+
+            let success = false;
+            let responseText = "";
+            let delay = 1000;
+
+            for (let attempt = 1; attempt <= 4; attempt++) {
+                try {
+                    const response = await fetch(modelUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (responseText) {
+                            success = true;
+                            break;
+                        }
+                    }
+                } catch (err) {
+                    // silent backoff
+                }
+                if (attempt < 4) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+
+            document.getElementById('ai-image-loader').classList.add('hidden');
+
+            if (success) {
+                document.getElementById('ai-image-output-content').innerText = responseText;
+            } else {
+                document.getElementById('ai-image-output-content').innerText = "Không thể phân tích ảnh tại thời điểm này. Vui lòng kiểm tra lại API Key hoặc đổi ảnh khác.";
+            }
+        }
+
+        async function generateTtsDialogue() {
+            const apiKey = localStorage.getItem('JAC_PREP_API_KEY') || "";
+            if (!apiKey) {
+                showCustomAlert("Vui lòng cấu hình API Key ở thanh công cụ để trải nghiệm giọng đọc đàm thoại chuẩn AI.");
+                return;
+            }
+
+            const scenario = document.getElementById('tts-scenario-select').value;
+            let promptText = "";
+            let speakerConfigs = [];
+
+            if (scenario === 'scenario_kyt') {
+                promptText = "TTS the following conversation between Đốc công (Anzen Kanrisha) and Công nhân:\nAnzen Kanrisha: Chào buổi sáng mọi người! Hôm nay chúng ta tháo dỡ giàn giáo vách đứng. Hãy chú ý mang đầy đủ đai an toàn toàn thân.\nCông nhân: Vâng! Tôi đã khóa chặt chốt cùm và kiểm tra kĩ dây cứu sinh rồi!";
+                speakerConfigs = [
+                    { speaker: "Anzen Kanrisha", voiceConfig: { prebuiltVoiceConfig: { voiceName: "Fenrir" } } },
+                    { speaker: "Công nhân", voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" } } }
+                ];
+            } else if (scenario === 'scenario_harness') {
+                promptText = "TTS the following conversation between Tổ trưởng (S作業長) and Thợ nề:\nS作業長: Có chuyện gì vậy? Sợi dây đai bảo hộ của bạn có vẻ bị sờn rách?\nThợ nề: Vâng thưa tổ trưởng! Khóa móc đai của tôi cũng bị kẹt lò xo, tôi xin phép đổi bộ đai mới ở phòng kho.";
+                speakerConfigs = [
+                    { speaker: "S作業長", voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } },
+                    { speaker: "Thợ nề", voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
+                ];
+            } else if (scenario === 'scenario_heat') {
+                promptText = "TTS the following conversation between Đốc công (Anzen Kanrisha) and Công nhân:\nAnzen Kanrisha: Sắc mặt của bạn không ổn lắm. Bạn có thấy đau đầu hay chóng mặt không?\nCông nhân: Vâng, cơ thể tôi mệt mỏi rã rời vì trời quá gắt. Cho tôi xin nghỉ uống nước muối điện giải tại lều mát ít phút.";
+                speakerConfigs = [
+                    { speaker: "Anzen Kanrisha", voiceConfig: { prebuiltVoiceConfig: { voiceName: "Fenrir" } } },
+                    { speaker: "Công nhân", voiceConfig: { prebuiltVoiceConfig: { voiceName: "Zephyr" } } }
+                ];
+            } else {
+                promptText = "TTS the following conversation between Đốc công (Anzen Kanrisha) and Thợ cẩu:\nAnzen Kanrisha: Xe cẩu sắp hạ dầm sắt xuống hố móng. Hãy giữ khoảng cách an toàn và ra tín hiệu合図 bằng còi thật chuẩn.\nThợ cẩu: Vâng, tôi đã chăng dây cấm vào và sẽ chỉ huy nâng hạ đúng nhịp!";
+                speakerConfigs = [
+                    { speaker: "Anzen Kanrisha", voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } },
+                    { speaker: "Thợ cẩu", voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } }
+                ];
+            }
+
+            document.getElementById('tts-dialogue-loader').classList.remove('hidden');
+            document.getElementById('tts-dialogue-script-box').innerHTML = "";
+            document.getElementById('tts-audio-player-box').classList.add('hidden');
+
+            const modelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        multiSpeakerVoiceConfig: {
+                            speakerVoiceConfigs: speakerConfigs
+                        }
+                    }
+                }
+            };
+
+            let success = false;
+            let audioDataBase64 = null;
+            let delay = 1000;
+
+            for (let attempt = 1; attempt <= 4; attempt++) {
+                try {
+                    const response = await fetch(modelUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        const part = result?.candidates?.[0]?.content?.parts?.[0];
+                        audioDataBase64 = part?.inlineData?.data;
+                        if (audioDataBase64) {
+                            success = true;
+                            break;
+                        }
+                    }
+                } catch (err) {
+                    // silent backoff
+                }
+                if (attempt < 4) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+
+            document.getElementById('tts-dialogue-loader').classList.add('hidden');
+
+            if (success && audioDataBase64) {
+                document.getElementById('tts-dialogue-script-box').innerHTML = `
+                    <div class="space-y-2 p-3 bg-white border rounded-2xl">
+                        <p class="text-xs text-indigo-700 font-bold"><i class="fa-solid fa-quote-left"></i> KỊCH BẢN THOẠI:</p>
+                        <p class="leading-relaxed whitespace-pre-wrap">${promptText.replace("TTS the following conversation between ", "").replace("TTS the following conversation", "")}</p>
+                    </div>
+                `;
+
+                try {
+                    const wavBlob = convertPcmToWav(audioDataBase64, 24000);
+                    const audioUrl = URL.createObjectURL(wavBlob);
+                    
+                    activeTtsAudio = new Audio(audioUrl);
+                    activeTtsAudio.addEventListener('loadedmetadata', () => {
+                        const min = Math.floor(activeTtsAudio.duration / 60);
+                        const sec = Math.round(activeTtsAudio.duration % 60);
+                        document.getElementById('tts-duration').innerText = `${min}:${String(sec).padStart(2, '0')}`;
+                    });
+
+                    activeTtsAudio.addEventListener('timeupdate', () => {
+                        const pct = (activeTtsAudio.currentTime / activeTtsAudio.duration) * 100;
+                        document.getElementById('tts-progress-wave').style.width = `${pct}%`;
+                    });
+
+                    activeTtsAudio.addEventListener('ended', () => {
+                        document.getElementById('btn-play-tts-audio').innerHTML = '<i class="fa-solid fa-play"></i>';
+                        document.getElementById('tts-progress-wave').style.width = "0%";
+                    });
+
+                    document.getElementById('tts-audio-player-box').classList.remove('hidden');
+                } catch (e) {
+                    showCustomAlert("Lỗi giải mã âm thanh PCM sang WAV. Vui lòng kiểm tra lại thiết lập trình duyệt.");
+                }
+            } else {
+                document.getElementById('tts-dialogue-script-box').innerHTML = `
+                    <p class="text-rose-600 font-bold">Không thể khởi tạo tệp tin đàm thoại TTS. Hãy đảm bảo API Key của bạn khả dụng.</p>
+                `;
+            }
+        }
+
+        function playCurrentTtsAudio() {
+            if (!activeTtsAudio) return;
+            const btn = document.getElementById('btn-play-tts-audio');
+
+            if (activeTtsAudio.paused) {
+                activeTtsAudio.play();
+                btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+            } else {
+                activeTtsAudio.pause();
+                btn.innerHTML = '<i class="fa-solid fa-play"></i>';
+            }
+        }
+
+        function convertPcmToWav(base64Data, sampleRate) {
+            const rawBuffer = base64ToArrayBuffer(base64Data);
+            const pcm16 = new Int16Array(rawBuffer);
+            
+            const buffer = new ArrayBuffer(44 + pcm16.length * 2);
+            const view = new DataView(buffer);
+            
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + pcm16.length * 2, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, pcm16.length * 2, true);
+            
+            for (let i = 0; i < pcm16.length; i++) {
+                view.setInt16(44 + i * 2, pcm16[i], true);
+            }
+            
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+    </script>
+
+    <script>
+        async function triggerMazziLookup(term) {
+            const cleanTerm = term.replace(/[（）()、。]/g, '').trim();
+            const modal = document.getElementById('modal-mazzi-output');
+            const loadingIndicator = document.getElementById('mazzi-loading-indicator');
+            const resultContent = document.getElementById('mazzi-result-content');
+            
+            document.getElementById('mazzi-selected-text').innerText = cleanTerm;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            const localMatch = mazziDictionary[cleanTerm];
+            if (localMatch) {
+                loadingIndicator.classList.add('hidden');
+                resultContent.classList.remove('hidden');
+                document.getElementById('mazzi-kana').innerText = localMatch.kana;
+                document.getElementById('mazzi-sino').innerText = localMatch.sino;
+                document.getElementById('mazzi-definition').innerText = localMatch.vn;
+                document.getElementById('mazzi-example').innerText = localMatch.ex;
+                return;
+            }
+
+            loadingIndicator.classList.remove('hidden');
+            resultContent.classList.add('hidden');
+
+            const apiKey = localStorage.getItem('JAC_PREP_API_KEY') || ""; 
+            const modelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            const promptText = getMazziStaticPrompt(cleanTerm);
+            const systemPrompt = "Bạn là từ điển Mazzi chuyên sâu về xây dựng Nhật Bản. Chỉ trả về dữ liệu định dạng JSON hợp lệ.";
+
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            kana: { type: "STRING" },
+                            sino: { type: "STRING" },
+                            definition: { type: "STRING" },
+                            example: { type: "STRING" }
+                        },
+                        required: ["kana", "sino", "definition", "example"]
+                    }
+                }
+            };
+
+            let success = false;
+            let responseData = null;
+            let delay = 1000;
+
+            for (let attempt = 1; attempt <= 4; attempt++) {
+                try {
+                    const response = await fetch(modelUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (rawText) {
+                            responseData = JSON.parse(rawText);
+                            success = true;
+                            break;
+                        }
+                    }
+                } catch (err) {
+                    // Suppressed
+                }
+                if (attempt < 4) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2; 
+                }
+            }
+
+            loadingIndicator.classList.add('hidden');
+            resultContent.classList.remove('hidden');
+
+            if (success && responseData) {
+                document.getElementById('mazzi-kana').innerText = responseData.kana;
+                document.getElementById('mazzi-sino').innerText = responseData.sino;
+                document.getElementById('mazzi-definition').innerText = responseData.definition;
+                document.getElementById('mazzi-example').innerText = responseData.example;
+            } else {
+                document.getElementById('mazzi-kana').innerText = "Chưa rõ cách đọc";
+                document.getElementById('mazzi-sino').innerText = "Không có";
+                document.getElementById('mazzi-definition').innerText = `Tra cứu tự động: ${cleanTerm}`;
+                document.getElementById('mazzi-example').innerText = "Hãy nhập API Key của bạn bằng cách ấn nút khóa vàng phía trên góc phải để mở khóa dịch nghĩa thông minh tức thì!";
+            }
+        }
+
+        function toggleAITutorDrawer() {
+            const drawer = document.getElementById('ai-tutor-drawer');
+            drawer.classList.toggle('translate-x-full');
+        }
+
+        function askAITutorAboutCurrent() {
+            toggleAITutorDrawer();
+            const q = activeQuestions[activeQuestionIndex];
+            
+            const prompt = `Hãy giải thích chi tiết câu hỏi luyện thi JAC sau bằng tiếng Việt:
+            Câu hỏi tiếng Nhật: ${q.q.replace(/<[^>]*>/g, '')}
+            Dịch nghĩa: ${q.viet}
+            Đáp án chuẩn: ${q.ans}
+            Ngữ cảnh tài liệu: ${q.exp}`;
+
+            appendChatMessage("user", `Hãy giải thích kỹ cho tôi câu hỏi số ${activeQuestionIndex + 1}: "${q.q.replace(/<[^>]*>/g, '')}"`);
+            invokeAIChatTutor(prompt);
+        }
+
+        async function sendAIChatMessage() {
+            const input = document.getElementById('ai-chat-input');
+            const userMsg = input.value.trim();
+            if (!userMsg) return;
+
+            input.value = '';
+            appendChatMessage("user", userMsg);
+            invokeAIChatTutor(userMsg);
+        }
+
+        function appendChatMessage(sender, text) {
+            const container = document.getElementById('ai-chat-messages');
+            const box = document.createElement('div');
+            
+            if (sender === "user") {
+                box.className = "flex justify-end gap-2.5 max-w-[85%] ml-auto";
+                box.innerHTML = `
+                    <div class="bg-indigo-600 text-white p-3 rounded-2xl text-xs shadow-sm leading-relaxed">
+                        ${text}
+                    </div>
+                `;
+            } else {
+                box.className = "flex gap-2.5 max-w-[85%]";
+                box.innerHTML = `
+                    <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm flex-shrink-0">🤖</div>
+                    <div class="bg-white p-3 rounded-2xl border border-slate-100 text-xs shadow-sm leading-relaxed text-slate-800">
+                        ${text}
+                    </div>
+                `;
+            }
+            container.appendChild(box);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function invokeAIChatTutor(promptText) {
+            const loader = document.getElementById('ai-chat-loader');
+            loader.classList.remove('hidden');
+
+            const apiKey = localStorage.getItem('JAC_PREP_API_KEY') || ""; 
+            const modelUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                systemInstruction: { parts: [{ text: "Bạn là giảng viên người Nhật chuyên luyện thi chứng chỉ đặc định xây dựng JAC. Hãy trả lời câu hỏi của học sinh bằng tiếng Việt dễ hiểu, khoa học." }] }
+            };
+
+            try {
+                const response = await fetch(modelUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const aiReply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (aiReply) {
+                        loader.classList.add('hidden');
+                        appendChatMessage("assistant", aiReply);
+                        return;
+                    }
+                }
+            } catch (err) {
+                // Suppressed
+            }
+
+            loader.classList.add('hidden');
+            appendChatMessage("assistant", "Có lỗi kết nối hoặc API Key trống. Hãy cài đặt API Key cá nhân của bạn ở biểu tượng nút khóa vàng phía góc trên bên phải để kích hoạt hoàn toàn Trợ lý Sư Phạm.");
+        }
+
+        function openApiKeyModal() {
+            const currentKey = localStorage.getItem('JAC_PREP_API_KEY') || "";
+            document.getElementById('input-api-key').value = currentKey;
+            document.getElementById('modal-apikey-config').classList.remove('hidden');
+            document.getElementById('modal-apikey-config').classList.add('flex');
+        }
+
+        function saveApiKey() {
+            const inputVal = document.getElementById('input-api-key').value.trim();
+            localStorage.setItem('JAC_PREP_API_KEY', inputVal);
+            localStorage.setItem('JAC_PREP_API_KEY', inputVal); // fallback syncing
+            closeModal('modal-apikey-config');
+            showCustomAlert("Đã lưu API Key thành công! Giờ đây bạn đã sẵn sàng trải nghiệm các tính năng sinh đề AI, quét hình ảnh kỹ thuật và phát âm đàm thoại.");
+        }
+
+        function toggleTranslation() {
+            billingShowVietnamese = !billingShowVietnamese;
+            if (billingShowVietnamese) {
+                document.body.classList.remove('hide-translation');
+                document.getElementById('transStatus').innerText = "ON";
+            } else {
+                document.body.classList.add('hide-translation');
+                document.getElementById('transStatus').innerText = "OFF";
+            }
+        }
+
+        function toggleFurigana() {
+            furiShowActive = !furiShowActive;
+            if (furiShowActive) {
+                document.body.classList.remove('hide-furigana');
+                document.getElementById('furiStatus').innerText = "ON";
+            } else {
+                document.body.classList.add('hide-furigana');
+                document.getElementById('furiStatus').innerText = "OFF";
+            }
+        }
+
+        function toggleVocabPanel() {
+            showVocabDrawerActive = !showVocabDrawerActive;
+            const drawer = document.getElementById('vocab-drawer');
+            const statusLabel = document.getElementById('vocabStatus');
+
+            if (showVocabDrawerActive) {
+                drawer.classList.remove('translate-x-full');
+                statusLabel.innerText = "ON";
+            } else {
+                drawer.classList.add('translate-x-full');
+                statusLabel.innerText = "OFF";
+            }
+        }
+
+        function filterVocabCategory(cat) {
+            activeVocabCategory = cat;
+            const categories = ['all', 'safety', 'construction', 'material'];
+            categories.forEach(c => {
+                const btn = document.getElementById(`cat-tab-${c}`);
+                if (c === cat) {
+                    btn.className = "px-2.5 py-1 rounded-lg font-bold transition bg-amber-500 text-slate-950 flex-shrink-0";
+                } else {
+                    btn.className = "px-2.5 py-1 rounded-lg font-bold transition bg-slate-100 text-slate-600 flex-shrink-0";
+                }
+            });
+            filterVocabList();
+        }
+
+        function filterVocabList() {
+            const query = document.getElementById('vocab-search-input').value.toLowerCase().trim();
+            const container = document.getElementById('vocab-list-container');
+            const contextLabel = document.getElementById('vocab-context-label');
+            container.innerHTML = '';
+
+            let targetVocabDb = vocabListDb;
+
+            if (activeQuestions && activeQuestions.length > 0) {
+                contextLabel.innerText = `${activeHubType === 'gakka' ? 'Lý thuyết' : 'Thực hành'} - Bộ đề ${String(activeExamIndex).padStart(2, '0')}`;
+                targetVocabDb = vocabListDb.filter(v => {
+                    return activeQuestions.some(q => q.q.includes(v.word) || q.viet.includes(v.word));
+                });
+            } else {
+                contextLabel.innerText = "TẤT CẢ TỪ VỰNG HỆ THỐNG";
+            }
+
+            const filtered = targetVocabDb.filter(v => {
+                if (activeVocabCategory !== 'all' && v.cat !== activeVocabCategory) return false;
+                if (query === '') return true;
+                return v.word.toLowerCase().includes(query) || 
+                       v.kana.toLowerCase().includes(query) || 
+                       v.sino.toLowerCase().includes(query) || 
+                       v.vn.toLowerCase().includes(query);
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-slate-400 text-xs font-semibold">
+                        <i class="fa-solid fa-face-frown text-2xl mb-2 block"></i>
+                        Không tìm thấy từ vựng khớp!
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(v => {
+                const card = document.createElement('div');
+                card.className = "p-3.5 bg-slate-50 border border-slate-200 rounded-2xl shadow-sm hover:shadow transition duration-150 space-y-2 relative group";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-2">
+                            <span class="text-base font-black text-slate-900 tracking-wide">
+                                <ruby>${v.word}<rt class="text-[9px] text-slate-500">${v.kana}</rt></ruby>
+                            </span>
+                            <button onclick="speakJapanese('${v.kana}')" class="text-indigo-500 hover:text-indigo-600 p-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition" title="Nghe phát âm">
+                                <i class="fa-solid fa-volume-low text-xs"></i>
+                            </button>
+                        </div>
+                        <span class="bg-emerald-50 text-emerald-900 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase">
+                            ${v.sino}
+                        </span>
+                    </div>
+                    <div class="text-xs text-indigo-950 font-bold leading-relaxed">
+                        ${v.vn}
+                    </div>
+                    <div class="text-[10px] text-slate-500 border-t border-slate-200/60 pt-1.5 leading-relaxed">
+                        <span class="font-extrabold text-slate-700 block mb-0.5">Ví dụ công trường:</span>
+                        <span>${v.ex}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderVocabDrawer() {
+            filterVocabList();
+        }
+
+        function toggleTheaterMode() {
+            const isTheater = document.body.classList.toggle('virtual-fullscreen-active');
+            const icon = document.getElementById('theaterIcon');
+            if (isTheater) {
+                icon.className = "fa-solid fa-compress";
+            } else {
+                icon.className = "fa-solid fa-expand";
+            }
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function speakJapanese(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ja-JP';
+                utterance.rate = 0.8; 
+                window.speechSynthesis.speak(utterance);
+            } else {
+                showCustomAlert("Hệ thống Speech Synthesis chưa hỗ trợ trên trình duyệt của bạn!");
+            }
+        }
+
+        function goHome() {
+            switchView('dashboard-view');
+            activeQuestions = []; 
+            clearInterval(examTimerInterval);
+            loadUserData();
+            renderHubSets();
+            filterVocabList(); 
+        }
+
+        function populatePostExamVocabulary() {
+            const container = document.getElementById('post-exam-vocab-container');
+            container.innerHTML = '';
+
+            const matchedVocabs = vocabListDb.filter(v => {
+                return activeQuestions.some(q => q.q.includes(v.word) || q.viet.includes(v.word));
+            });
+
+            if (matchedVocabs.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-2 text-center text-slate-400 py-6 text-xs font-semibold">
+                        Không có từ vựng chuyên dụng nào được ghi nhận trong đề này.
+                    </div>
+                `;
+                return;
+            }
+
+            matchedVocabs.forEach(v => {
+                const card = document.createElement('div');
+                card.className = "p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col justify-between space-y-2 relative shadow-sm";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-black text-slate-900 tracking-wide">
+                                <ruby>${v.word}<rt class="text-[9px] text-slate-500">${v.kana}</rt></ruby>
+                            </span>
+                            <button onclick="speakJapanese('${v.kana}')" class="text-indigo-500 hover:text-indigo-600 p-1 rounded-lg bg-indigo-100/50 hover:bg-indigo-100 transition" title="Nghe phát âm">
+                                <i class="fa-solid fa-volume-low text-xs"></i>
+                            </button>
+                        </div>
+                        <span class="bg-indigo-50 text-indigo-900 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase">
+                            ${v.sino}
+                        </span>
+                    </div>
+                    <div class="text-xs text-indigo-950 font-bold leading-relaxed">
+                        ${v.vn}
+                    </div>
+                    <div class="text-[10px] text-slate-500 border-t border-slate-200/60 pt-2 leading-relaxed">
+                        <span class="font-bold text-slate-700 block mb-0.5">Mẫu sử dụng công trường:</span>
+                        <span>${v.ex}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function populateResultReview() {
+            const container = document.getElementById('result-review-container');
+            container.innerHTML = '';
+
+            activeQuestions.forEach((q, idx) => {
+                const userAns = activeUserAnswers[idx] || "Bỏ trống";
+                const isCorrect = userAns === q.ans;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = `p-5 rounded-2xl border-2 flex flex-col justify-start space-y-3.5 ${
+                    isCorrect ? 'border-emerald-100 bg-emerald-50/10' : 'border-rose-100 bg-rose-50/10'
+                }`;
+
+                let indicator = isCorrect 
+                    ? `<span class="px-3 py-1 rounded-xl text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> ĐÚNG</span>`
+                    : `<span class="px-3 py-1 rounded-xl text-[10px] font-bold bg-rose-100 text-rose-800 flex items-center gap-1"><i class="fa-solid fa-circle-xmark"></i> SAI</span>`;
+
+                wrapper.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-black text-slate-400">CÂU HỎI ${idx + 1}</span>
+                        ${indicator}
+                    </div>
+                    <p class="font-extrabold text-slate-900 text-sm leading-relaxed">${q.q}</p>
+                    <p class="text-xs text-indigo-600 font-bold vietnamese-translation"><i class="fa-solid fa-language text-[11px]"></i> ${q.viet}</p>
+                    
+                    ${q.svg ? `<div class="bg-white border rounded-xl p-3 max-w-[150px] my-1">${q.svg}</div>` : ''}
+
+                    <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3 text-xs">
+                        <div>
+                            <span class="text-slate-400 block">Lựa chọn của bạn:</span>
+                            <span class="font-bold ${isCorrect ? 'text-emerald-700' : 'text-rose-700'}">${userAns}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block">Đáp án chính xác:</span>
+                            <span class="font-bold text-emerald-700">${q.ans}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/75 border border-slate-200/80 rounded-2xl p-4 mt-2">
+                        <span class="text-[10px] font-black text-indigo-700 uppercase tracking-wider block mb-1">💡 Hướng dẫn & Giải thích:</span>
+                        <p class="text-xs font-bold text-slate-800 leading-relaxed">${q.exp}</p>
+                        <p class="text-xs text-slate-500 font-semibold vietnamese-translation mt-2"><i class="fa-solid fa-quote-left text-[8px]"></i> ${q.expViet}</p>
+                    </div>
+                `;
+                container.appendChild(wrapper);
+            });
+        }
+    </script>
+</body>
+</html>
